@@ -1,0 +1,46 @@
+# -*- coding: utf-8 -*-
+# author Amrish Bakaran
+# author Adheesh
+# author Bala Murali
+# Copyright
+# brief Drone class containing state, methods and history of the drone
+
+import numpy as np
+import random as rand
+
+from constants import CONST
+np.set_printoptions(precision=3, suppress=True)
+
+class Agent:
+    def __init__(self):
+        self.curPos = np.array([CONST.GRID_SZ/2,CONST.GRID_SZ/2])
+        self.curVel = np.array([0,0])
+        self.size = 0.4 # Diameter of the drone
+        self.tourTaken = [] # list of positions that the drone has taken
+        self.maxVelocity = CONST.MAX_AGENT_VEL # m/s
+        
+    def setParams(self, vel):
+        self.curVel = vel * self.maxVelocity
+            
+    def updateState(self, timeStep):
+        self.updatePos(timeStep)
+        self.updateTour()
+    
+    def updatePos(self, timeStep):
+        newPosition = self.curPos + self.curVel * timeStep
+        self.curPos = np.round(newPosition,3)
+#        print("Drone POS = ", self.curPos)
+    
+    def updateTour(self):
+        if len(self.tourTaken) > 0:
+            #print((self.tourTaken[-1] == self.curPos).all())
+            if not (self.tourTaken[-1] == self.curPos).all():
+                self.tourTaken.append(self.curPos)
+                #print(len(self.tourTaken))
+        else:
+            self.tourTaken.append(self.curPos)
+
+    def getState(self):
+        return self.curPos, self.curVel, self.tourTaken
+        
+        
