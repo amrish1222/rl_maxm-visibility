@@ -9,15 +9,14 @@ import numpy as np
 import random
 import copy
 
-from constants import CONST
+from constants import CONSTANTS as K
+CONST = K()
 from agent import Agent
-from mobile_robot import MobileRobot
-from render import Render
 
 np.set_printoptions(precision=3, suppress=True)
 class Env:
-    def __init__(self, numDrones, numMobileRobs):
-        self.agents = self.initAgents(CONST.NUM_DRONES)
+    def __init__(self):
+        self.agents = self.initAgents(CONST.NUM_AGENTS)
         self.timeStep = CONST.TIME_STEP
         
         
@@ -73,10 +72,10 @@ class Env:
         return posOut, velOut
     
     def step(self, agentActions):
-        dronePos, droneVel = self.stepDrones(agentActions)
+        agentPos, agentVel = self.stepAgent(agentActions)
         # update reward mechanism
         reward = self.getReward()
-        return dronePos, reward
+        return agentPos, reward
                 
 
     def render(self):
