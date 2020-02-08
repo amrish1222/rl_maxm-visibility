@@ -14,7 +14,7 @@ np.set_printoptions(precision=3, suppress=True)
 
 class Agent:
     def __init__(self):
-        self.curPos = np.array([0,0])
+        self.curPos = np.array([CONST.GRID_SZ/2,CONST.GRID_SZ/2])
         self.curVel = np.array([0,0])
         self.size = 0.4 # Diameter of the drone
         self.tourTaken = [] # list of positions that the drone has taken
