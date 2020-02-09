@@ -21,6 +21,8 @@ class CONSTANTS:
         self.GRID_SZ = self.MAX_AGENT_VEL * self.TIME_STEP * 1.0
 
         self.MAX_STEPS = 50
+        
+        self.MAP_SIZE = self.MAX_STEPS * self.GRID_SZ
 
 ## Area
         
