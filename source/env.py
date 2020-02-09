@@ -8,25 +8,35 @@
 import numpy as np
 import random
 import copy
+import math
+import cv2
 
 from constants import CONSTANTS as K
 CONST = K()
 from agent import Agent
+from obstacle import Obstacle
+obsMap = Obstacle()
+
+from visibility import Visibility
+vsb  = Visibility(CONST.MAP_SIZE, CONST.MAP_SIZE)
 
 np.set_printoptions(precision=3, suppress=True)
 class Env:
     def __init__(self):
         self.agents = self.initAgents(CONST.NUM_AGENTS)
         self.timeStep = CONST.TIME_STEP
-        
+        self.obstacleMap,self.obsPlusViewed = self.initTotalArea()
+        self.currentMapState = copy.deepcopy(self.obsPlusViewed)
         
     def initTotalArea(self):
-        # beyond = 0
-        # unexplored = 50
-        # explored = 255
-        # drone pos = 100
+        # unviewed = 0
+        # viewed = 255
+        # obstacle = 150
+        # agent Pos = 100
         
-        return 0
+        obstacleMap = np.zeros((50,50)) # update with new obstacles
+        obstacleMap, arrangement = obsMap.getObstacleMap(obstacleMap, vsb)
+        return obstacleMap, obstacleMap
         
     def initAgents(self, n):
         agents = []
@@ -53,41 +63,94 @@ class Env:
         posOut = []
         velOut = []
         for agent, action in zip(self.agents, actions):
-            vel = np.array([0,0])
-            if action == 0:
-                pass
-            elif action == 1:
-                vel[1] = 1
-            elif action == 2:
-                vel[0] = -1
-            elif action == 3:
-                vel[1] = -1
-            elif action == 4:
-                vel[0] = 1
-            agent.setParams(vel)
-            agent.updateState(self.timeStep)
             curState = agent.getState()
-            posOut.append(curState[0])
-            velOut.append(curState[1])
+            futureState = copy.deepcopy(curState[0])
+            if action == 0:
+                    pass
+            elif action == 1:
+                futureState[1] += 1
+            elif action == 2:
+                futureState[0] += -1
+            elif action == 3:
+                futureState[1] += -1
+            elif action == 4:
+                futureState[0] += 1
+            # check if agent in obstacle
+            isInObs = False
+            for obs in vsb.obsPolyList:
+                val = vsb.isPtinPoly(futureState,obs)
+                if  val == 1 or val == 0:
+                    isInObs = True
+            if 0<futureState[0] <50 and 0<futureState[1] <50 and not isInObs:
+                vel = np.array([0,0])
+                if action == 0:
+                    pass
+                elif action == 1:
+                    vel[1] = 1
+                elif action == 2:
+                    vel[0] = -1
+                elif action == 3:
+                    vel[1] = -1
+                elif action == 4:
+                    vel[0] = 1
+                agent.setParams(vel)
+                agent.updateState(self.timeStep)
+                curState = agent.getState()
+                posOut.append(curState[0])
+                velOut.append(curState[1])
+            else:
+                posOut.append(curState[0])
+                velOut.append(curState[1])
         return posOut, velOut
     
     def step(self, agentActions):
         agentPos, agentVel = self.stepAgent(agentActions)
+        gPos = self.cartesian2Grid(agentPos)
+        # get new visibility and update obsPlusViewed
+        self.obsPlusViewed = vsb.updateVsbPolyOnImg(agentPos,self.obsPlusViewed)
+        # update position on currentMapState
+        self.currentMapState = self.updatePosMap(gPos)
+        
         # update reward mechanism
         reward = self.getReward()
         return agentPos, reward
                 
 
     def render(self):
+        img = copy.deepcopy(self.currentMapState)
+        img = np.rot90(img,1)
+        r = np.where(img==150, 255, 0)
+        g = np.where(img==100, 255, 0)
+        
+        b = np.zeros_like(img)
+        b_n = np.where(img==255, 100, 0)
+        bgr = np.stack((b,g,r),axis = 2)
+        bgr[:,:,0] = b_n
+        displayImg = cv2.resize(bgr,(1000,1000),interpolation = cv2.INTER_AREA)
+        
+        cv2.imshow("Position Map", displayImg)
         pass
     
             
-    def updateArea(self):
-        pass 
+    def updatePosMap(self, gPos):
+        currMapState = copy.deepcopy(self.obsPlusViewed)
+        for pos in gPos:
+            currMapState[pos[0],pos[1]] = 100
+        return currMapState
+            
         
     def getReward(self):
             reward = 0
             return reward
+        
+    def cartesian2Grid(self, posList):
+        gridList = []
+        for pos in posList:
+            _x = math.floor(pos[0]/CONST.GRID_SZ)
+            _y = math.floor(pos[1]/CONST.GRID_SZ)
+            gridList.append([int(_x),int(_y)])
+        return gridList
+        
                     
 
 
