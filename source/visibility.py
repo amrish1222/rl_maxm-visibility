@@ -6,20 +6,44 @@ Created on Thu Feb  6 01:33:51 2020
 """
 
 import copy
-from skgeom import sg
+import skgeom as sg
+import numpy as np
+from matplotlib import pyplot as plt
+from constants import CONSTANTS as K
+CONST = K()
 
 class Visibility:
-    def __init__(self,length, width):
+    def __init__(self,length, height):
+        self.boundary = sg.arrangement.Arrangement()
         self.boundary_obs = sg.arrangement.Arrangement()
         self.visibilityPolygon = None
+        self.boundary2Arrangement(length,height)
+        self.obsPolyList = []
         
     def addGeom2Arrangement(self, pts):
+        tempObs = sg.arrangement.Arrangement()
         # pts in 2D list
         edges = self.pts2Edges(pts)
         for ed in edges:
+            tempObs.insert(ed)
             self.boundary_obs.insert(ed)
+        self.obsPolyList.append(self.getSgPolyFromArr(tempObs))
+        for he in tempObs.halfedges:
+            sg.draw.draw(he.curve(), visible_point=False)
         
-    def pts2Edges(pts):
+    def boundary2Arrangement(self, length, height):
+        pts = [[0,0],
+               [0,height],
+               [length, height],
+               [length, 0]]
+        edges = self.pts2Edges(pts)
+        for ed in edges:
+            self.boundary.insert(ed)
+            self.boundary_obs.insert(ed)
+        for he in self.boundary.halfedges:
+            sg.draw.draw(he.curve(),color='red', visible_point=False)
+    
+    def pts2Edges(self,pts):
         edges = []
         for i in range(1,len(pts)):
             e = sg.Segment2(sg.Point2(pts[i-1][0],pts[i-1][1]), sg.Point2(pts[i][0],pts[i][1]))
@@ -28,50 +52,73 @@ class Visibility:
         edges.append(e)
         return edges
     
-    def getSgPolyFromVx(self, vx):
+    def getSgPolyFromArr(self, arr):
         allEdges = []
-        for e in vx.halfedges:
+        for e in arr.halfedges:
             edge = [e.source().point(), e.target().point()]
             edgeRev = [e.target().point(), e.source().point()]
             if not edgeRev in allEdges and not edge in allEdges:
                 allEdges.append([e.source().point(), e.target().point()])
         
-        vsbltyPoly = []
+        polyPts = []
         prevEndPt = allEdges[0][1]
-        vsbltyPoly.append( allEdges[0][0])
+        polyPts.append( allEdges[0][0])
         allEdges.pop(0)
         
         while len(allEdges)>0:
-        #    print(len(allEdges))
+#            print(len(allEdges))
             for e in allEdges:
                 if prevEndPt == e[0]:
-                    vsbltyPoly.append(prevEndPt)
+                    polyPts.append(prevEndPt)
                     prevEndPt = e[1]
                     allEdges.remove(e)
                 elif prevEndPt == e[1]:
-                    vsbltyPoly.append(prevEndPt)
+                    polyPts.append(prevEndPt)
                     prevEndPt = e[0]
                     allEdges.remove(e)
                     break
-        return vsbltyPoly
+        poly = sg.Polygon(polyPts)
+        return poly
     
     def getVisibilityPolygon(self,fromPt):
         vs = sg.RotationalSweepVisibility(self.boundary_obs)
         q = sg.Point2(fromPt[0], fromPt[1])
         face = self.boundary_obs.find(q)
         vx = vs.compute_visibility(q, face)
-        visibilityPolygon = self.getSgPolyFromVx(vx)
+        visibilityPolygon = self.getSgPolyFromArr(vx)
         self.visbilityPolygon = visibilityPolygon
         return visibilityPolygon
         
     
-    def isPtinPoly(self, pt):
+    def isPtinPoly(self, pt, polygon):
         # pt as a list
-        position = self.visibilityPolygon.oriented_side(sg.Point2(pt[0],pt[1]))
+        position = polygon.oriented_side(sg.Point2(pt[0],pt[1]))
         if position == sg.Sign.POSITIVE:
             return 1
         elif position == sg.Sign.NEGATIVE:
             return -1
         elif position == sg.Sign.ZERO:
             return 0
+        
+    def updateVsbPolyOnImg(self, pt, img):
+        # update for multiple agents
+        vsbPoly = self.getVisibilityPolygon(pt[0])
+        print(pt[0])
+        
+# =============================================================================
+#         # use to check if polygon is wrong
+#         if pt[0][0] == 0.5 and pt[0][1] == 10.5:
+#             sg.draw.draw_polygon(vsbPoly)
+#             plt.pause(0.01)
+# =============================================================================
+#        
+        lib_insideID = self.isPtinPoly(pt[0],vsbPoly)
+        for i in range(0, int(CONST.MAP_SIZE)):
+            for j in range(0, int(CONST.MAP_SIZE)):
+                x = CONST.GRID_SZ/2 + i* CONST.GRID_SZ
+                y = CONST.GRID_SZ/2 + j* CONST.GRID_SZ
+                if self.isPtinPoly([x,y],vsbPoly) == lib_insideID:
+                    img[i,j] = 255
+        return img
+        
         
