@@ -103,7 +103,7 @@ class Visibility:
     def updateVsbPolyOnImg(self, pt, img):
         # update for multiple agents
         vsbPoly = self.getVisibilityPolygon(pt[0])
-        print(pt[0])
+#        print(pt[0])
         
 # =============================================================================
 #         # use to check if polygon is wrong
