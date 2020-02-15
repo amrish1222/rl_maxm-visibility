@@ -23,6 +23,7 @@ vsb  = Visibility(CONST.MAP_SIZE, CONST.MAP_SIZE)
 np.set_printoptions(precision=3, suppress=True)
 class Env:
     def __init__(self):
+        self.isNewSess = True
         self.agents = self.initAgents(CONST.NUM_AGENTS)
         self.timeStep = CONST.TIME_STEP
         self.obstacleMap,self.obsPlusViewed, self.currentMapState = self.initTotalArea()
@@ -35,8 +36,12 @@ class Env:
         # agent Pos = 100
         
         obstacleMap = np.zeros((50,50)) # update with new obstacles
-        obstacleMap, arrangement = obsMap.getObstacleMap(obstacleMap, vsb)
-        obstacleViewedMap = copy.deepcopy(obstacleMap)
+        if self.isNewSess:
+            obstacleMap, arrangement = obsMap.getObstacleMap(obstacleMap, vsb)
+            self.isNewSess = False
+        else:
+            obstacleMap = self.obstacleMap
+        obstacleViewedMap = np.copy(obstacleMap)
         for agent in self.agents:
             obstacleViewedMap = vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
         
@@ -47,7 +52,7 @@ class Env:
     
     def resetTotalArea(self):
         obstacleMap = self.obstacleMap
-        obstacleViewedMap = copy.deepcopy(obstacleMap)
+        obstacleViewedMap = np.copy(obstacleMap)
         for agent in self.agents:
             obstacleViewedMap = vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
         
@@ -63,19 +68,25 @@ class Env:
         return agents
       
     def reset(self):
+        
         self.agents = self.initAgents(len(self.agents))
+        
         # need to update initial state for reset function
         self.obstacleMap,self.obsPlusViewed, self.currentMapState = self.initTotalArea()
+
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
-        initialState = 0
-        return initialState
+        
+        state = []
+        for agent in self.agents:
+            state.append([agent.getState()[0],self.currentMapState])
+        
+        return state
         
     def getActionSpace(self):
         return [0,1,2,3,4]
     
     def getStateSpace(self):
-        
-        return 0
+        return self.obstacleMap.size + 2
     
     def stepAgent(self, actions):
         # have to decide on the action space
@@ -138,7 +149,7 @@ class Env:
                 
 
     def render(self):
-        img = copy.deepcopy(self.currentMapState)
+        img = np.copy(self.currentMapState)
         img = np.rot90(img,1)
         r = np.where(img==150, 255, 0)
         g = np.where(img==100, 255, 0)
@@ -151,15 +162,16 @@ class Env:
         
         cv2.imshow("Position Map", displayImg)
         cv2.imshow("raw", cv2.resize(img,(700,700),interpolation = cv2.INTER_AREA))
+        cv2.waitKey(1)
         pass
     
             
     def updatePosMap(self, gPos, obsPlusViewed):
-        currMapState = copy.deepcopy(obsPlusViewed)
+        currMapState = np.copy(obsPlusViewed)
         for pos in gPos:
             currMapState[pos[0],pos[1]] = 100
         return currMapState
-            
+        
         
     def getReward(self):
         curUnviewedCount = np.count_nonzero(self.currentMapState==0)
