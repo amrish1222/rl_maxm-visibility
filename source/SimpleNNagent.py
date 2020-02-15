@@ -5,10 +5,10 @@ Created on Sun Nov  14 09:45:29 2019
 
 @author: bala
 """
-
 import random
 import numpy as np
 import copy
+from operator import itemgetter 
 from sklearn.metrics import mean_squared_error as skMSE
 
 import torch
@@ -16,43 +16,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-from torch.utils.tensorboard import SummaryWriter
+#from torch.utils.tensorboard import SummaryWriter
 
 class agentModelFC1(nn.Module):
-    def __init__(self,env, device, loggingLevel):
+    def __init__(self,env, device):
         super().__init__()
-        self.stateSpaceSz, \
-        self.w, \
-        self.h, \
-        self.drPos, \
-        self.mrVel, \
-        self.mrPos, \
-        self.dCharge = env.getStateSpace()
+        self.numFeatures = env.getStateSpace()
         
-        self.loggingLevel = loggingLevel
         self.device = device
         
-        self.l1 = nn.Linear(in_features = self.stateSpaceSz, out_features = 1000)
+        self.l1 = nn.Linear(in_features = self.numFeatures, out_features = 1000)
         self.l2 = nn.Linear(in_features = 1000, out_features = 500)
         self.l3 = nn.Linear(in_features = 500, out_features = 25)
         self.l4 = nn.Linear(in_features = 25, out_features = len(env.getActionSpace()))
 
-    def stitch(self,state):
-        n_mrPos, \
-        n_mrVel, \
-        n_localArea, \
-        n_dronePos, \
-        n_droneVel, \
-        n_droneCharge, \
-        n_dock, \
-        n_reward, \
-        n_done = state
-        
-        return np.hstack((np.asarray(n_mrPos).reshape(-1),
-                          np.asarray(n_mrVel).reshape(-1),
-                          np.asarray(n_localArea).reshape(-1),
-                          np.asarray(n_dronePos).reshape(-1),
-                          np.asarray(n_droneCharge).reshape(-1)))
     
     def forward(self, x):
         x = F.relu(self.l1(x))
@@ -62,28 +39,29 @@ class agentModelFC1(nn.Module):
         return x
         
 class SimpleNNagent():
-    def __init__(self,env, loggingLevel):
+    def __init__(self,env):
+        self.curState = []
+        self.nxtState = []
+        self.doneList = []
+        self.rwdList = []
+        self.actnList = []
         self.trainX = []
         self.trainY = []
-        self.replayMemory = []
-        self.maxReplayMemory = 10000
+        self.maxReplayMemory = 5000
         self.epsilon = 1.0
         self.minEpsilon = 0.01
-        self.epsilonDecay = 0.999
+        self.epsilonDecay = 0.995
         self.discount = 0.95
         self.learningRate = 0.0000001
         self.batchSize = 128
         self.envActions = env.getActionSpace()
         self.nActions = len(self.envActions)
-        self.loggingLevel = loggingLevel
         self.buildModel(env)
-        self.sw = SummaryWriter(log_dir=f"tf_log/demoNN_{random.randint(0, 1000)}")
-        print(f"Log Dir: {self.sw.log_dir}")
         
     def buildModel(self,env):   
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         print(f'Device : {self.device}')
-        self.model = agentModelFC1(env, self.device, self.loggingLevel).to(self.device)
+        self.model = agentModelFC1(env, self.device).to(self.device)
         self.loss_fn = nn.MSELoss()
 #        self.optimizer = optim.SGD(self.model.parameters(), lr=self.learningRate)
         self.optimizer = optim.Adam(self.model.parameters(), lr = self.learningRate)
@@ -107,7 +85,7 @@ class SimpleNNagent():
             #ChooseMax
             #Handle multiple max
             self.model.eval()
-            X = torch.from_numpy(np.reshape(self.model.stitch(state),(1,-1))).to(self.device)
+            X = torch.from_numpy(np.reshape(state,(1,-1))).to(self.device)
             self.qValues = self.model(X.float()).cpu().detach().numpy()[0]
 #            print(".............X..........", self.qValues)
             action = np.random.choice(
@@ -143,34 +121,45 @@ class SimpleNNagent():
                             )
         return action
     
-    def buildReplayMemory(self, currState, nextState, action):
-        if len(self.replayMemory)> self.maxReplayMemory:
-            self.replayMemory.pop()
-        self.replayMemory.append([currState, nextState, action])
+    def buildReplayMemory(self, currentState, nextState, action, done, reward):
+        if len(self.trainX)> self.maxReplayMemory:
+            # pop the first elemtnt of the list
+            self.curState.pop(0)
+            self.nxtState.pop(0)
+            self.actnList.pop(0)
+            self.doneList.pop(0)
+            self.rwdList.pop(0)
+        
+        self.curState.append(currentState)
+        self.nxtState.append(nextState)
+        self.actnList.append(action)
+        self.doneList.append(done)
+        self.rwdList.append(reward)
     
     def buildMiniBatchTrainData(self):
+        
         c = []
         n = []
         r = []
         d = []
         a = []
-        if len(self.replayMemory)>self.batchSize:
-            minibatch = random.sample(self.replayMemory, self.batchSize)
+        
+        if len(self.curState)>self.batchSize:
+            ndxs = random.sample(range(len(self.curState)), self.batchSize)
         else:
-            minibatch = self.replayMemory
-        bSize = len(minibatch)
-        for ndx,[currState, nextState, action] in enumerate(minibatch):
-            c.append(self.model.stitch(currState))
-            n.append(self.model.stitch(nextState))
-            r.append(nextState[-2])
-            d.append(nextState[-1])
-            a.append([ndx, action])
-        c = np.asanyarray(c)
-        n = np.asanyarray(n)
-        r = np.asanyarray(r)
-        d = np.asanyarray(d)
-        a = np.asanyarray(a)
-        a = a.T
+            ndxs = range(len(self.curState))
+       
+        bSize = len(ndxs)   
+        
+        c = np.asanyarray(np.array(itemgetter(*ndxs)(self.curState)))
+        n = np.asanyarray(np.array(itemgetter(*ndxs)(self.nxtState)))
+        r = np.asanyarray(np.array(itemgetter(*ndxs)(self.rwdList)))
+        d = np.asanyarray(np.array(itemgetter(*ndxs)(self.doneList)))
+        a_ = np.array(itemgetter(*ndxs)(self.actnList))
+        aTemp = np.vstack((np.array(range(len(a_))),a_))
+        a = np.asanyarray(aTemp)
+        
+
         self.model.eval()
         X = torch.from_numpy(np.reshape(n,(bSize,-1))).to(self.device)
         qVal_n = self.model(X.float()).cpu().detach().numpy()
@@ -186,6 +175,7 @@ class SimpleNNagent():
         Y[a[0],a[1]] = y
         self.trainX = c
         self.trainY = Y
+
         return skMSE(Y,qVal_c)
         
     def saveModel(self, filePath):
@@ -194,20 +184,11 @@ class SimpleNNagent():
     def loadModel(self, filePath):
         self.model = torch.load(filePath)
     
-    def summaryWriter_showNetwork(self, curr_state):
-        X = torch.tensor(list(self.model.stitch(curr_state))).to(self.device)
-        self.sw.add_graph(self.model, X)
-    
-    def summaryWriter_addMetrics(self, episode, loss, reward, lenEpisode):
-        self.sw.add_scalar('Loss', loss, episode)
-        self.sw.add_scalar('Reward', reward, episode)
-        self.sw.add_scalar('Episode Length', lenEpisode, episode)
-        self.sw.add_scalar('Epsilon', self.epsilon, episode)
+    def formatInput(self, states):
+        out = []
+        for state in states:
+            out.append(np.concatenate((state[0], state[1].flatten())))
+        return out
         
-        if self.loggingLevel >= 2:
-            self.sw.add_histogram('l1.bias', self.model.l1.bias, episode)
-            self.sw.add_histogram('l1.weight', self.model.l1.weight, episode)
-            self.sw.add_histogram('l1.weight.grad', self.model.l1.weight.grad, episode)
     
-    def summaryWriter_close(self):
-        self.sw.close()
+    
