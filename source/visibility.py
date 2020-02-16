@@ -4,11 +4,12 @@ Created on Thu Feb  6 01:33:51 2020
 
 @author: amris
 """
-
+import time
 import copy
 import skgeom as sg
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.path import Path
 from constants import CONSTANTS as K
 CONST = K()
 
@@ -100,25 +101,63 @@ class Visibility:
         elif position == sg.Sign.ZERO:
             return 0
         
-    def updateVsbPolyOnImg(self, pt, img):
+    def updateVsbPolyOnImgOld(self, pt, img):
+        times = []
+        a = time.time()
         # update for multiple agents
         vsbPoly = self.getVisibilityPolygon(pt[0])
 #        print(pt[0])
-        
+        b = time.time()
+        times.append(["getVsbPoly", round(1000*(b-a),3)])
 # =============================================================================
 #         # use to check if polygon is wrong
 #         if pt[0][0] == 0.5 and pt[0][1] == 10.5:
 #             sg.draw.draw_polygon(vsbPoly)
 #             plt.pause(0.01)
 # =============================================================================
-#        
+       
+        a = time.time()
         lib_insideID = self.isPtinPoly(pt[0],vsbPoly)
+        b = time.time()
+        times.append(["checkPtInPoly", round(1000*(b-a),3)])
+        
+        a = time.time()
         for i in range(0, int(CONST.MAP_SIZE)):
             for j in range(0, int(CONST.MAP_SIZE)):
                 x = CONST.GRID_SZ/2 + i* CONST.GRID_SZ
                 y = CONST.GRID_SZ/2 + j* CONST.GRID_SZ
                 if self.isPtinPoly([x,y],vsbPoly) == lib_insideID:
                     img[i,j] = 255
+        b = time.time()
+        times.append(["fillMap", round(1000*(b-a),3)])
+        
+        print(times)
         return img
+    
+    
+    def updateVsbPolyOnImg(self, pt, img):
+        # update for multiple agents
+        vsbPoly = self.getVisibilityPolygon(pt[0])
+#        print(pt[0])
+# =============================================================================
+#         # use to check if polygon is wrong
+#         if pt[0][0] == 0.5 and pt[0][1] == 10.5:
+#             sg.draw.draw_polygon(vsbPoly)
+#             plt.pause(0.01)
+# =============================================================================
+       
+        x, y = np.meshgrid(np.arange(50), np.arange(50))
+        x, y = x.flatten()+0.5, y.flatten() + 0.5
+        points = np.vstack((x,y)).T
+        p = Path(vsbPoly.coords)
+        grid = p.contains_points(points)
+        mask = grid.reshape(50,50)
+        vsbGrid = mask.T
+        temp = np.copy(img)
+        # updating grid with matplotlib calculated visibility grid
+        temp = np.where(vsbGrid, 255, temp)
+        # adding the obstacles back
+#        temp = np.where(img == 150, 150, temp)
+        return temp
         
         

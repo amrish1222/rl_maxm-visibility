@@ -122,7 +122,7 @@ for episode in tqdm(range(NUM_EPISODES)):
             rlAgent.trainModel()
             
             b = time.time()
-            times.append(["buidlBatch time", round(1000*(b-a),0)])
+            times.append(["Train time", round(1000*(b-a),0)])
         
 #        print(times)
         
