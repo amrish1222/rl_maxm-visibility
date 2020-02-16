@@ -161,7 +161,7 @@ class Env:
         displayImg = cv2.resize(bgr,(700,700),interpolation = cv2.INTER_AREA)
         
         cv2.imshow("Position Map", displayImg)
-        cv2.imshow("raw", cv2.resize(img,(700,700),interpolation = cv2.INTER_AREA))
+#        cv2.imshow("raw", cv2.resize(img,(700,700),interpolation = cv2.INTER_AREA))
         cv2.waitKey(1)
         pass
     
