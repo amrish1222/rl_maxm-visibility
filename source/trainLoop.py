@@ -52,8 +52,8 @@ def getKeyPress(act):
 
 env = Env()
 rlAgent = sNN.SimpleNNagent(env)
-NUM_EPISODES = 1000
-LEN_EPISODES = 50
+NUM_EPISODES = 2000
+LEN_EPISODES = 25
 curState = []
 newState= []
 reward_history = []
@@ -65,7 +65,7 @@ keyPress = 1
 a = time.time()
 
 for episode in tqdm(range(NUM_EPISODES)):
-    LEN_EPISODES = 50 + min(int(episode* 5 /50),175)
+    LEN_EPISODES = 25 + min(int(episode* 3 /50),80)
     a = time.time()
     curRawState = env.reset()
     b = time.time()
@@ -146,6 +146,7 @@ for episode in tqdm(range(NUM_EPISODES)):
     # Epsilon Decay
     if rlAgent.epsilon >= rlAgent.minEpsilon:
         rlAgent.epsilon *= rlAgent.epsilonDecay
+#        rlAgent.my_lr_scheduler.step()
     
     
     # Record history
@@ -160,7 +161,7 @@ for episode in tqdm(range(NUM_EPISODES)):
     # Otherwise, things will slow
     if episode % 10 == 0:
         if dispFlag:
-            fig = plt.figure(1)
+            fig = plt.figure(2)
             plt.clf()
             plt.xlim([0,NUM_EPISODES])
             plt.plot(reward_history,'ro')
@@ -171,7 +172,7 @@ for episode in tqdm(range(NUM_EPISODES)):
             plt.pause(0.01)
             fig.canvas.draw()
             
-            fig = plt.figure(2)
+            fig = plt.figure(3)
             plt.clf()
             plt.xlim([0,NUM_EPISODES])
             plt.plot(loss_history,'bo')

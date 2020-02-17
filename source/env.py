@@ -24,12 +24,11 @@ np.set_printoptions(precision=3, suppress=True)
 class Env:
     def __init__(self):
         self.isNewSess = True
-        self.agents = self.initAgents(CONST.NUM_AGENTS)
         self.timeStep = CONST.TIME_STEP
-        self.obstacleMap,self.obsPlusViewed, self.currentMapState = self.initTotalArea()
+        self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents = self.initTotalArea_agents(CONST.NUM_AGENTS)
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
         
-    def initTotalArea(self):
+    def initTotalArea_agents(self, numAgents):
         # unviewed = 0
         # viewed = 255
         # obstacle = 150
@@ -42,13 +41,22 @@ class Env:
         else:
             obstacleMap = self.obstacleMap
         obstacleViewedMap = np.copy(obstacleMap)
-        for agent in self.agents:
+        
+        #initialize agents at random location
+        agents = []
+        x,y = np.nonzero(obstacleMap == 0)
+        ndxs = random.sample(range(x.shape[0]), CONST.NUM_AGENTS)
+        
+        for ndx in ndxs:
+            agents.append(Agent(x[ndx]+0.5, y[ndx]+0.5))
+                   
+        for agent in agents:
             obstacleViewedMap = vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
         
-        agentPos = [agent.getState()[0] for agent in self.agents]
+        agentPos = [agent.getState()[0] for agent in agents]
         gPos = self.cartesian2Grid(agentPos)
         currentMapState = self.updatePosMap(gPos, obstacleViewedMap)
-        return obstacleMap, obstacleViewedMap, currentMapState
+        return obstacleMap, obstacleViewedMap, currentMapState, agents
     
     def resetTotalArea(self):
         obstacleMap = self.obstacleMap
@@ -69,10 +77,8 @@ class Env:
       
     def reset(self):
         
-        self.agents = self.initAgents(len(self.agents))
-        
         # need to update initial state for reset function
-        self.obstacleMap,self.obsPlusViewed, self.currentMapState = self.initTotalArea()
+        self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents = self.initTotalArea_agents(CONST.NUM_AGENTS)
 
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
         
