@@ -47,13 +47,13 @@ class SimpleNNagent():
         self.actnList = []
         self.trainX = []
         self.trainY = []
-        self.maxReplayMemory = 5000
+        self.maxReplayMemory = 3000
         self.epsilon = 1.0
         self.minEpsilon = 0.01
-        self.epsilonDecay = 0.995
+        self.epsilonDecay = 0.997
         self.discount = 0.95
         self.learningRate = 0.0000001
-        self.batchSize = 128
+        self.batchSize = 32
         self.envActions = env.getActionSpace()
         self.nActions = len(self.envActions)
         self.buildModel(env)
@@ -65,6 +65,7 @@ class SimpleNNagent():
         self.loss_fn = nn.MSELoss()
 #        self.optimizer = optim.SGD(self.model.parameters(), lr=self.learningRate)
         self.optimizer = optim.Adam(self.model.parameters(), lr = self.learningRate)
+#        self.my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=self.optimizer, gamma=0.1)
         
     def trainModel(self):
         self.model.train()
