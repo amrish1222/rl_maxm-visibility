@@ -52,7 +52,7 @@ def getKeyPress(act):
 
 env = Env()
 rlAgent = sNN.SimpleNNagent(env)
-NUM_EPISODES = 2000
+NUM_EPISODES = 6000
 LEN_EPISODES = 25
 curState = []
 newState= []
@@ -65,7 +65,7 @@ keyPress = 1
 a = time.time()
 
 for episode in tqdm(range(NUM_EPISODES)):
-    LEN_EPISODES = 25 + min(int(episode* 3 /50),80)
+    LEN_EPISODES = 25 + min(int(episode* 2 /50),80)
     a = time.time()
     curRawState = env.reset()
     b = time.time()
@@ -124,7 +124,7 @@ for episode in tqdm(range(NUM_EPISODES)):
             b = time.time()
             times.append(["Train time", round(1000*(b-a),0)])
         
-#        print(times)
+        print(times)
         
         # record history
 #        reward = sum(rewardList)
@@ -159,7 +159,7 @@ for episode in tqdm(range(NUM_EPISODES)):
 #            dAgent.summaryWriter_addMetrics(episode, episode_loss, episode_reward, step + 1)
     # You may want to plot periodically instead of after every episode
     # Otherwise, things will slow
-    if episode % 10 == 0:
+    if episode % 50 == 0:
         if dispFlag:
             fig = plt.figure(2)
             plt.clf()
