@@ -50,9 +50,9 @@ class SimpleNNagent():
         self.maxReplayMemory = 3000
         self.epsilon = 1.0
         self.minEpsilon = 0.01
-        self.epsilonDecay = 0.997
+        self.epsilonDecay = 0.9986
         self.discount = 0.95
-        self.learningRate = 0.0000001
+        self.learningRate = 0.000001
         self.batchSize = 32
         self.envActions = env.getActionSpace()
         self.nActions = len(self.envActions)
@@ -96,7 +96,7 @@ class SimpleNNagent():
     
     def getMaxAction(self, state):
         self.model.eval()
-        X = torch.from_numpy(np.reshape(self.model.stitch(state),(1,-1))).to(self.device)
+        X = torch.from_numpy(np.reshape(state,(1,-1))).to(self.device)
         self.qValues = self.model(X.float()).cpu().detach().numpy()[0]
 #            print(".............X..........", self.qValues)
         action = np.random.choice(
@@ -184,6 +184,7 @@ class SimpleNNagent():
     
     def loadModel(self, filePath):
         self.model = torch.load(filePath)
+        self.model.eval()
     
     def formatInput(self, states):
         out = []
