@@ -3,6 +3,7 @@
 import warnings
 warnings.filterwarnings('ignore')
 import time
+import keyboard
 
 import numpy as np
 from env import Env
@@ -36,7 +37,7 @@ def waitKeyPress():
             wait = False
     return act
 
-def getKeyPress(act):
+def getKeyPressOld(act):
     k = cv2.waitKeyEx(1) 
     #            print(k)
     if k == 2490368:
@@ -49,10 +50,21 @@ def getKeyPress(act):
         act = 4
     return act
 
+def getKeyPress(act):
+    if keyboard.is_pressed('up'):
+        act = 1
+    elif keyboard.is_pressed('left'):
+        act = 2
+    elif keyboard.is_pressed('down'):
+        act = 3
+    elif keyboard.is_pressed('right'):
+        act = 4
+    return act
+
 
 env = Env()
 rlAgent = sNN.SimpleNNagent(env)
-rlAgent.loadModel("checkpoints/testFC1MultiPtIter6kE1e6.pt")
+rlAgent.loadModel("checkpoints/testFC2MultiPtIter6kE1e6.pt")
 NUM_EPISODES = 3000
 LEN_EPISODES = 100
 curState = []

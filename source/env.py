@@ -49,6 +49,7 @@ class Env:
         
         for ndx in ndxs:
             agents.append(Agent(x[ndx]+0.5, y[ndx]+0.5))
+#            agents.append(Agent())
                    
         for agent in agents:
             obstacleViewedMap = vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
@@ -92,7 +93,7 @@ class Env:
         return [0,1,2,3,4]
     
     def getStateSpace(self):
-        return self.obstacleMap.size + 2
+        return self.obstacleMap.size
     
     def stepAgent(self, actions):
         # have to decide on the action space

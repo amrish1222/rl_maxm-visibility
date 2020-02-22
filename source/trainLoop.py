@@ -3,6 +3,7 @@
 import warnings
 warnings.filterwarnings('ignore')
 import time
+import keyboard
 
 import numpy as np
 from env import Env
@@ -36,7 +37,7 @@ def waitKeyPress():
             wait = False
     return act
 
-def getKeyPress(act):
+def getKeyPressOld(act):
     k = cv2.waitKeyEx(1) 
     #            print(k)
     if k == 2490368:
@@ -46,6 +47,17 @@ def getKeyPress(act):
     elif k == 2621440:
         act = 3
     elif k == 2555904:
+        act = 4
+    return act
+
+def getKeyPress(act):
+    if keyboard.is_pressed('z'):
+        act = 1
+    elif keyboard.is_pressed('left'):
+        act = 2
+    elif keyboard.is_pressed('down'):
+        act = 3
+    elif keyboard.is_pressed('right'):
         act = 4
     return act
 
@@ -59,13 +71,14 @@ newState= []
 reward_history = []
 reward_last100 = []
 loss_history = []
+totalViewed = []
 dispFlag = True
 
 keyPress = 1
 a = time.time()
 
 for episode in tqdm(range(NUM_EPISODES)):
-    LEN_EPISODES = 25 + min(int(episode* 2 /50),80)
+    LEN_EPISODES = 25 + min(int(episode* 5 /50),125)
     a = time.time()
     curRawState = env.reset()
     b = time.time()
@@ -79,24 +92,24 @@ for episode in tqdm(range(NUM_EPISODES)):
     
     for step in range(LEN_EPISODES):
         times = []
-        a = time.time()
         # render environment after taking a step
         keyPress = getKeyPress(keyPress)
+        
         if keyPress == 1:
             env.render()
+            
             
         # Get agent actions
         aActions = []
         for i in range(CONST.NUM_AGENTS):
             # get action for each agent using its current state from the network
-            aActions.append(rlAgent.getTrainAction(curState[i]))
+            aActions.append(rlAgent.EpsilonGreedyPolicy(curState[i]))
         
         # do actions
         a = time.time()
         agentPosList, display, reward, done = env.step(aActions)
         b = time.time()
-        times.append(["step time", round(1000*(b-a),0)])
-        a = time.time()
+        times.append(["Step", round(1000*(b-a),0)])
         # update nextState
         newRawState = []
         for agentPos in agentPosList:
@@ -115,16 +128,16 @@ for episode in tqdm(range(NUM_EPISODES)):
             loss = rlAgent.buildMiniBatchTrainData()
            
             b = time.time()
-            times.append(["buidlBatch time", round(1000*(b-a),0)])
+            times.append(["buidlBatch", round(1000*(b-a),0)])
             
             a = time.time()
             
             rlAgent.trainModel()
             
             b = time.time()
-            times.append(["Train time", round(1000*(b-a),0)])
+            times.append(["Train", round(1000*(b-a),0)])
         
-        print(times)
+#        print(times)
         
         # record history
 #        reward = sum(rewardList)
@@ -156,6 +169,7 @@ for episode in tqdm(range(NUM_EPISODES)):
         reward_last100.append(sum(reward_history[-100:])/100)
     reward_history.append(episodeReward)
     loss_history.append(epidoseLoss)
+    totalViewed.append(np.count_nonzero(display==255))
 #            dAgent.summaryWriter_addMetrics(episode, episode_loss, episode_reward, step + 1)
     # You may want to plot periodically instead of after every episode
     # Otherwise, things will slow
@@ -165,6 +179,7 @@ for episode in tqdm(range(NUM_EPISODES)):
             plt.clf()
             plt.xlim([0,NUM_EPISODES])
             plt.plot(reward_history,'ro')
+            plt.plot(totalViewed,'g.')
             plt.plot(reward_last100)
             plt.xlabel('Episode')
             plt.ylabel('Reward')
@@ -175,7 +190,7 @@ for episode in tqdm(range(NUM_EPISODES)):
             fig = plt.figure(3)
             plt.clf()
             plt.xlim([0,NUM_EPISODES])
-            plt.plot(loss_history,'bo')
+            plt.plot(loss_history,'b.')
             plt.xlabel('Episode')
             plt.ylabel('Loss')
             plt.title('Loss per episode')
