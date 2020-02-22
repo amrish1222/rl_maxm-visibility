@@ -28,6 +28,10 @@ class Obstacle:
         return emptyMap, vsb
     
     def getObstacles(self):
+        obstacle = self.obstacle1()
+        return obstacle
+    
+    def obstacle1(self):
         obsList = []
         # add points in CW order and 
         
@@ -65,3 +69,75 @@ class Obstacle:
         
         return obsList
         
+    
+    def obstacle2(self):
+        obsList = []
+        # add points in CW order and 
+        
+        geom = [[6,6],
+                [6,12],
+                [44,12],
+                [44,6]]
+        obsList.append(geom)
+        
+        geom = [[35,18],
+                [35,23],
+                [41,23],
+                [41,18]]
+        obsList.append(geom)
+        
+        geom = [[39,29],
+                [39,34],
+                [44,34],
+                [44,29]]
+        obsList.append(geom)
+        
+        geom = [[12,29],
+                [12,39],
+                [17,39],
+                [17,29]]
+        obsList.append(geom)
+        
+        geom = [[23,39],
+                [23,44],
+                [28,44],
+                [28,39]]
+        obsList.append(geom)
+        
+        return obsList
+    
+    def obstacle3(self):
+        obsList = []
+        # add points in CW order and 
+        
+        geom = [[6,6],
+                [6,12],
+                [44,12],
+                [44,6]]
+        obsList.append(geom)
+        
+        geom = [[35,18],
+                [35,23],
+                [41,23],
+                [41,18]]
+        obsList.append(geom)
+        
+        geom = [[39,29],
+                [39,34],
+                [44,34],
+                [44,29]]
+        obsList.append(geom)
+        
+        geom = [[12,29],
+                [12,39],
+                [17,39],
+                [17,29]]
+        obsList.append(geom)
+        
+        geom = [[23,39],
+                [23,44],
+                [28,44],
+                [28,39]]
+        obsList.append(geom)
+        
+        return obsList
