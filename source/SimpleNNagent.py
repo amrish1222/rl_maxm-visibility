@@ -49,8 +49,8 @@ class SimpleNNagent():
         self.trainY = []
         self.maxReplayMemory = 3000
         self.epsilon = 1.0
-        self.minEpsilon = 0.01
-        self.epsilonDecay = 0.9986
+        self.minEpsilon = 0.05
+        self.epsilonDecay = 0.997
         self.discount = 0.95
         self.learningRate = 0.000001
         self.batchSize = 32
@@ -123,7 +123,7 @@ class SimpleNNagent():
         return action
     
     def buildReplayMemory(self, currentState, nextState, action, done, reward):
-        if len(self.trainX)> self.maxReplayMemory:
+        if len(self.curState)> self.maxReplayMemory-1:
             # pop the first elemtnt of the list
             self.curState.pop(0)
             self.nxtState.pop(0)
@@ -188,8 +188,10 @@ class SimpleNNagent():
     
     def formatInput(self, states):
         out = []
+#        for state in states:
+#            out.append(np.concatenate((state[0], state[1].flatten())))
         for state in states:
-            out.append(np.concatenate((state[0], state[1].flatten())))
+            out.append(state[1].flatten())
         return out
         
     
