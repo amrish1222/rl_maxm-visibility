@@ -146,9 +146,7 @@ class Visibility:
 #             plt.pause(0.01)
 # =============================================================================
        
-        x, y = np.meshgrid(np.arange(50), np.arange(50))
-        x, y = x.flatten()+0.5, y.flatten() + 0.5
-        points = np.vstack((x,y)).T
+        points = CONST.GRID_CENTER_PTS
         p = Path(vsbPoly.coords)
         grid = p.contains_points(points)
         mask = grid.reshape(50,50)

@@ -1,10 +1,9 @@
 	# -*- coding: utf-8 -*-
 # author Amrish Bakaran
-# author Adheesh
-# author Bala Murali
 # Copyright
 # Constants
 
+import numpy as np
 RENDER_PYGAME = True
 
 
@@ -23,6 +22,14 @@ class CONSTANTS:
         self.MAX_STEPS = 50
         
         self.MAP_SIZE = self.MAX_STEPS * self.GRID_SZ
+        
+        self.GRID_CENTER_PTS = self.getGridCenterPts()
+        
+    def getGridCenterPts(self):
+        x, y = np.meshgrid(np.arange(50), np.arange(50))
+        x, y = x.flatten()+0.5, y.flatten() + 0.5
+        points = np.vstack((x,y)).T
+        return points
 
 ## Area
         
