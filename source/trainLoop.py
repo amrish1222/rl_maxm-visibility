@@ -51,14 +51,10 @@ def getKeyPressOld(act):
     return act
 
 def getKeyPress(act):
-    if keyboard.is_pressed('z'):
+    if keyboard.is_pressed('['):
         act = 1
-    elif keyboard.is_pressed('left'):
+    elif keyboard.is_pressed(']'):
         act = 2
-    elif keyboard.is_pressed('down'):
-        act = 3
-    elif keyboard.is_pressed('right'):
-        act = 4
     return act
 
 
@@ -73,6 +69,10 @@ reward_last100 = []
 loss_history = []
 totalViewed = []
 dispFlag = True
+
+curRawState = env.reset()
+curState = rlAgent.formatInput(curRawState)
+rlAgent.summaryWriter_showNetwork(curState[0])
 
 keyPress = 1
 a = time.time()
@@ -170,9 +170,10 @@ for episode in tqdm(range(NUM_EPISODES)):
     reward_history.append(episodeReward)
     loss_history.append(epidoseLoss)
     totalViewed.append(np.count_nonzero(display==255))
-#            dAgent.summaryWriter_addMetrics(episode, episode_loss, episode_reward, step + 1)
+    
     # You may want to plot periodically instead of after every episode
     # Otherwise, things will slow
+    rlAgent.summaryWriter_addMetrics(episode, epidoseLoss, episodeReward, LEN_EPISODES)
     if episode % 50 == 0:
         if dispFlag:
             fig = plt.figure(2)
