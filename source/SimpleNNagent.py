@@ -15,8 +15,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-#from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 class agentModelFC1(nn.Module):
     def __init__(self,env, device):
@@ -57,6 +56,9 @@ class SimpleNNagent():
         self.envActions = env.getActionSpace()
         self.nActions = len(self.envActions)
         self.buildModel(env)
+        
+        self.sw = SummaryWriter(log_dir=f"tf_log/demo_CNN{random.randint(0, 1000)}")
+        print(f"Log Dir: {self.sw.log_dir}")
         
     def buildModel(self,env):   
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -113,14 +115,6 @@ class SimpleNNagent():
         action = self.EpsilonGreedyPolicy(state)
         return action    
     
-    def getAction(self,state):
-        self.model.eval()
-        X = torch.from_numpy(np.reshape(self.model.stitch(state),(1,-1))).to(self.device)
-        self.qValues = self.model(X.float()).cpu().detach().numpy()[0]
-        action = np.random.choice(
-                            np.where(self.qValues == np.max(self.qValues))[0]
-                            )
-        return action
     
     def buildReplayMemory(self, currentState, nextState, action, done, reward):
         if len(self.curState)> self.maxReplayMemory-1:
@@ -194,5 +188,17 @@ class SimpleNNagent():
             out.append(state[1].flatten())
         return out
         
+    def summaryWriter_showNetwork(self, curr_state):
+        X = torch.tensor(list(curr_state)).to(self.device)
+        self.sw.add_graph(self.model, X, False)
+    
+    def summaryWriter_addMetrics(self, episode, loss, reward, lenEpisode):
+        self.sw.add_scalar('3. Loss', loss, episode)
+        self.sw.add_scalar('1. Reward', reward, episode)
+        self.sw.add_scalar('4. Episode Length', lenEpisode, episode)
+        self.sw.add_scalar('2. Epsilon', self.epsilon, episode)
+        
+    def summaryWriter_close(self):
+        self.sw.close()
     
     
