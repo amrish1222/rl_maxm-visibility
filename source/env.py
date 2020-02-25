@@ -114,12 +114,11 @@ class Env:
             elif action == 4:
                 futureState[0] += 1
             # check if agent in obstacle
-            isInObs = False
-            for obs in vsb.obsPolyList:
-                val = vsb.isPtinPoly(futureState,obs)
-                if  val == 1 or val == 0:
-                    isInObs = True
-            if 0<futureState[0] <50 and 0<futureState[1] <50 and not isInObs:
+            isValidPt = False
+            if 0<futureState[0] <50 and 0<futureState[1] <50 :
+                if self.obstacleMap[int(futureState[0]), int(futureState[1])] == 150:
+                    isValidPt = True
+            if 0<futureState[0] <50 and 0<futureState[1] <50 and not isValidPt:
                 vel = np.array([0,0])
                 if action == 0:
                     pass
