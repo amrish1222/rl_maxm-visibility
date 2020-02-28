@@ -51,20 +51,16 @@ def getKeyPressOld(act):
     return act
 
 def getKeyPress(act):
-    if keyboard.is_pressed('up'):
+    if keyboard.is_pressed('['):
         act = 1
-    elif keyboard.is_pressed('left'):
+    elif keyboard.is_pressed(']'):
         act = 2
-    elif keyboard.is_pressed('down'):
-        act = 3
-    elif keyboard.is_pressed('right'):
-        act = 4
     return act
 
 
 env = Env()
 rlAgent = sNN.SimpleNNagent(env)
-rlAgent.loadModel("checkpoints/testFC2MultiPtIter6kE1e6.pt")
+rlAgent.loadModel("checkpoints/testFC2MultiPtE1e6.pt")
 NUM_EPISODES = 3000
 LEN_EPISODES = 100
 curState = []
@@ -133,12 +129,14 @@ for episode in tqdm(range(NUM_EPISODES)):
     
     
     # Record history
-    if len(reward_history) <=100:
+    if len(reward_history) < 1:
         reward_last100.append(0)
+    elif len(reward_history) <=100:
+        reward_last100.append(sum(reward_history)/ len(reward_history))
     else:
         reward_last100.append(sum(reward_history[-100:])/100)
     reward_history.append(episodeReward)
-#            dAgent.summaryWriter_addMetrics(episode, episode_loss, episode_reward, step + 1)
+    rlAgent.summaryWriter_addMetrics(episode, 0, episodeReward, reward_last100[-1],step + 1)
     # You may want to plot periodically instead of after every episode
     # Otherwise, things will slow
     if episode % 10 == 0:

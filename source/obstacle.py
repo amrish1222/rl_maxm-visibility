@@ -34,7 +34,7 @@ class Obstacle:
         return img, vsb
     
     def getObstacles(self):
-        obstacle = self.obstacle2()
+        obstacle = self.obstacle1()
         return obstacle
     
     def obstacle1(self):
