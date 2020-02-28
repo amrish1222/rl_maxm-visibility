@@ -60,7 +60,7 @@ def getKeyPress(act):
 
 env = Env()
 rlAgent = sNN.SimpleNNagent(env)
-NUM_EPISODES = 6000
+NUM_EPISODES = 3000
 LEN_EPISODES = 25
 curState = []
 newState= []
@@ -68,7 +68,7 @@ reward_history = []
 reward_last100 = []
 loss_history = []
 totalViewed = []
-dispFlag = True
+dispFlag = False
 
 curRawState = env.reset()
 curState = rlAgent.formatInput(curRawState)
@@ -78,7 +78,7 @@ keyPress = 1
 a = time.time()
 
 for episode in tqdm(range(NUM_EPISODES)):
-    LEN_EPISODES = 25 + min(int(episode* 5 /50),125)
+    LEN_EPISODES = 25 + min(int(episode* 5 /50),100)
     a = time.time()
     curRawState = env.reset()
     b = time.time()
@@ -163,8 +163,10 @@ for episode in tqdm(range(NUM_EPISODES)):
     
     
     # Record history
-    if len(reward_history) <=100:
+    if len(reward_history) < 1:
         reward_last100.append(0)
+    elif len(reward_history) <=100:
+        reward_last100.append(sum(reward_history)/ len(reward_history))
     else:
         reward_last100.append(sum(reward_history[-100:])/100)
     reward_history.append(episodeReward)
@@ -173,7 +175,7 @@ for episode in tqdm(range(NUM_EPISODES)):
     
     # You may want to plot periodically instead of after every episode
     # Otherwise, things will slow
-    rlAgent.summaryWriter_addMetrics(episode, epidoseLoss, episodeReward, LEN_EPISODES)
+    rlAgent.summaryWriter_addMetrics(episode, epidoseLoss, episodeReward, reward_last100[-1], LEN_EPISODES)
     if episode % 50 == 0:
         if dispFlag:
             fig = plt.figure(2)

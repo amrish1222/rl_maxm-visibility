@@ -48,8 +48,8 @@ class SimpleNNagent():
         self.trainY = []
         self.maxReplayMemory = 3000
         self.epsilon = 1.0
-        self.minEpsilon = 0.05
-        self.epsilonDecay = 0.997
+        self.minEpsilon = 0.01
+        self.epsilonDecay = 0.998
         self.discount = 0.95
         self.learningRate = 0.000001
         self.batchSize = 32
@@ -192,11 +192,12 @@ class SimpleNNagent():
         X = torch.tensor(list(curr_state)).to(self.device)
         self.sw.add_graph(self.model, X, False)
     
-    def summaryWriter_addMetrics(self, episode, loss, reward, lenEpisode):
-        self.sw.add_scalar('3. Loss', loss, episode)
-        self.sw.add_scalar('1. Reward', reward, episode)
-        self.sw.add_scalar('4. Episode Length', lenEpisode, episode)
-        self.sw.add_scalar('2. Epsilon', self.epsilon, episode)
+    def summaryWriter_addMetrics(self, episode, loss, reward, last100Rwd, lenEpisode):
+        self.sw.add_scalar('5.Loss', loss, episode)
+        self.sw.add_scalar('3.Reward', reward, episode)
+        self.sw.add_scalar('4.Episode Length', lenEpisode, episode)
+        self.sw.add_scalar('2.Epsilon', self.epsilon, episode)
+        self.sw.add_scalar('1.Average of Last 100 episodes', last100Rwd, episode)
         
     def summaryWriter_close(self):
         self.sw.close()
