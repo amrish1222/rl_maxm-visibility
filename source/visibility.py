@@ -15,10 +15,12 @@ CONST = K()
 
 class Visibility:
     def __init__(self,length, height):
+        self.length = length
+        self.height = height
         self.boundary = sg.arrangement.Arrangement()
         self.boundary_obs = sg.arrangement.Arrangement()
         self.visibilityPolygon = None
-        self.boundary2Arrangement(length,height)
+#        self.boundary2Arrangement(length,height)
         self.obsPolyList = []
         
     def addGeom2Arrangement(self, pts):
@@ -28,7 +30,7 @@ class Visibility:
         for ed in edges:
             tempObs.insert(ed)
             self.boundary_obs.insert(ed)
-        self.obsPolyList.append(self.getSgPolyFromArr(tempObs))
+#        self.obsPolyList.append(self.getSgPolyFromArr(tempObs))
         for he in tempObs.halfedges:
             sg.draw.draw(he.curve(), visible_point=False)
         
@@ -139,12 +141,6 @@ class Visibility:
         # update for multiple agents
         vsbPoly = self.getVisibilityPolygon(pt[0])
 #        print(pt[0])
-# =============================================================================
-#         # use to check if polygon is wrong
-#         if pt[0][0] == 0.5 and pt[0][1] == 10.5:
-#             sg.draw.draw_polygon(vsbPoly)
-#             plt.pause(0.01)
-# =============================================================================
        
         points = CONST.GRID_CENTER_PTS
         p = Path(vsbPoly.coords)

@@ -10,11 +10,60 @@ from constants import CONSTANTS as K
 from matplotlib.path import Path
 CONST = K()
 
+from visibility import Visibility
 
 class Obstacle:
     def __init__(self):
         pass
     
+    def getAllObs_vsbs(self, emptyMap):
+        obsMaps = []
+        vsbs = []
+        
+        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle1())
+        obsMaps.append(mp)
+        vsbs.append(vsb)
+        
+        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle2())
+        obsMaps.append(mp)
+        vsbs.append(vsb)
+        
+        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle3())
+        obsMaps.append(mp)
+        vsbs.append(vsb)
+        
+        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle4())
+        obsMaps.append(mp)
+        vsbs.append(vsb)
+        
+        return obsMaps, vsbs
+    
+    def getObstacleMap(self, emptyMap, obstacleSet):
+        obsList = obstacleSet
+        vsb  = Visibility(emptyMap.shape[0], emptyMap.shape[1])
+        for obs, isHole in obsList:
+            vsb.addGeom2Arrangement(obs)
+        
+        isHoles = [obs[1] for obs in obsList]
+        if any(isHoles) == True:
+            pass
+        else:
+            vsb.boundary2Arrangement(vsb.length, vsb.height)
+        
+        # get obstacle polygon
+        points = CONST.GRID_CENTER_PTS
+        img = np.zeros_like(emptyMap, dtype = bool)
+        for obs, isHole in obsList:
+            p = Path(obs)
+            grid = p.contains_points(points)
+            mask = grid.reshape(50,50)
+            img = np.logical_or(img , (mask if not isHole else np.logical_not(mask)))
+           
+        img = img.T
+        img = np.where(img,150,emptyMap)
+        return img, vsb
+    
+    """
     def getObstacleMap(self, emptyMap, vsb):
         obsList = self.getObstacles()
         for obs, isHole in obsList:
@@ -32,6 +81,7 @@ class Obstacle:
         img = img.T
         img = np.where(img,150,emptyMap)
         return img, vsb
+    """
     
     def getObstacles(self):
         obstacle = self.obstacle1()
@@ -113,46 +163,136 @@ class Obstacle:
         
         return obsList
     
-    
     def obstacle3(self):
         obsList = []
         # add points in CW order and 
         isHole = True
-        geom = [[1,1],
-                [1,49],
-                [49,49],
-                [49,1]]
+        geom = [[0,5],
+                [0,15],
+                [3,15],
+                [3,20],
+                [0,20],
+                [0,30],
+                [3,30],
+                [3,35],
+                [0,35],
+                [0,45],
+                [9,45],
+                [6,45],
+                [6,35],
+                [6,30],
+                [15,30],
+                [15,35],
+                [12,35],
+                [12,45],
+                [21,45],
+                [21,35],
+                [18,35],
+                [18,30],
+                [27,30],
+                [27,35],
+                [24,35],
+                [24,45],
+                [33,45],
+                [33,35],
+                [30,35],
+                [30,30],
+                [39,30],
+                [39,35],
+                [36,35],
+                [36,45],
+                [50,45],
+                [50,35],
+                [42,35],
+                [42,30],
+                [50,30],
+                [50,20],
+                [42,20],
+                [42,15],
+                [50,15],
+                [50,5],
+                [36,5],
+                [36,15],
+                [39,15],
+                [39,20],
+                [30,20],
+                [30,15],
+                [33,15],
+                [33,5],
+                [24,5],
+                [24,15],
+                [27,15],
+                [27,20],
+                [18,20],
+                [18,15],
+                [21,15],
+                [21,5],
+                [12,5],
+                [12,15],
+                [15,15],
+                [15,20],
+                [6,20],
+                [6,15],
+                [9,15],
+                [9,5]]
         obsList.append([geom, isHole])
         
-        isHole = False
+        return obsList
+    
+    def obstacle4(self):
+        obsList = []
+        # add points in CW order and 
+        isHole = True
+        geom = [[3,30],
+                [18,30],
+                [18,12],
+                [33,12],
+                [33,27],
+                [30,27],
+                [30,30],
+                [33,30],
+                [33,39],
+                [36,39],
+                [36,33],
+                [39,33],
+                [39,36],
+                [48,36],
+                [48,27],
+                [39,27],
+                [39,30],
+                [36,30],
+                [36,21],
+                [39,21],
+                [39,24],
+                [48,24],
+                [48,15],
+                [39,15],
+                [39,18],
+                [36,18],
+                [36,12],
+                [48,12],
+                [48,9],
+                [18,9],
+                [18,6],
+                [14,6],
+                [14,27],
+                [3,27]]
+        obsList.append([geom, isHole])
+        
+        return obsList
+    
+    def obstacle5(self):
+        obsList = []
+        # add points in CW order and 
+        isHole = True
         geom = [[6,6],
-                [6,12],
-                [44,12],
-                [44,6]]
-        obsList.append([geom, isHole])
-        
-        geom = [[35,18],
-                [35,23],
-                [41,23],
-                [41,18]]
-        obsList.append([geom, isHole])
-        
-        geom = [[39,29],
-                [39,34],
-                [44,34],
-                [44,29]]
-        obsList.append([geom, isHole])
-        
-        geom = [[12,29],
-                [12,39],
-                [17,39],
-                [17,29]]
-        obsList.append([geom, isHole])
-        
-        geom = [[23,39],
-                [23,44],
-                [28,44],
-                [28,39]]
+                [6,30],
+                [44,30],
+                [44,6],
+                [42,6],
+                [42,10],
+                [40,10],
+                [40,6]]
         obsList.append([geom, isHole])
         
         return obsList
