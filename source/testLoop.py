@@ -60,7 +60,7 @@ def getKeyPress(act):
 
 env = Env()
 rlAgent = sNN.SimpleNNagent(env)
-rlAgent.loadModel("checkpoints/testFC2MultiPtE1e6.pt")
+rlAgent.loadModel("checkpoints/testMultiMap.pt")
 NUM_EPISODES = 3000
 LEN_EPISODES = 100
 curState = []

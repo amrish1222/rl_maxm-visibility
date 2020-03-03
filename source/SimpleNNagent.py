@@ -46,7 +46,7 @@ class SimpleNNagent():
         self.actnList = []
         self.trainX = []
         self.trainY = []
-        self.maxReplayMemory = 3000
+        self.maxReplayMemory = 12000
         self.epsilon = 1.0
         self.minEpsilon = 0.01
         self.epsilonDecay = 0.998

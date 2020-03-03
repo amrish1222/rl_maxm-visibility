@@ -17,29 +17,31 @@ from agent import Agent
 from obstacle import Obstacle
 obsMap = Obstacle()
 
-from visibility import Visibility
-vsb  = Visibility(CONST.MAP_SIZE, CONST.MAP_SIZE)
 
 np.set_printoptions(precision=3, suppress=True)
 class Env:
     def __init__(self):
         self.isNewSess = True
         self.timeStep = CONST.TIME_STEP
+        self.obsMaps, self.vsbs = self.initObsMaps_Vsbs()
+        self.obstacleMap , self.vsb = self.setRandMap_vsb()
         self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents = self.initTotalArea_agents(CONST.NUM_AGENTS)
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
-        
+    
+    def initObsMaps_Vsbs(self):
+        return obsMap.getAllObs_vsbs(np.zeros((50,50)))
+    
+    def setRandMap_vsb(self):
+        i = random.randint(0, len(self.obsMaps)-1)
+        return self.obsMaps[i], self.vsbs[i]
+    
     def initTotalArea_agents(self, numAgents):
         # unviewed = 0
         # viewed = 255
         # obstacle = 150
         # agent Pos = 100
         
-        obstacleMap = np.zeros((50,50)) # update with new obstacles
-        if self.isNewSess:
-            obstacleMap, arrangement = obsMap.getObstacleMap(obstacleMap, vsb)
-            self.isNewSess = False
-        else:
-            obstacleMap = self.obstacleMap
+        obstacleMap = self.obstacleMap
         obstacleViewedMap = np.copy(obstacleMap)
         
         #initialize agents at random location
@@ -52,7 +54,7 @@ class Env:
 #            agents.append(Agent())
                    
         for agent in agents:
-            obstacleViewedMap = vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
+            obstacleViewedMap = self.vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
         
         agentPos = [agent.getState()[0] for agent in agents]
         gPos = self.cartesian2Grid(agentPos)
@@ -63,7 +65,7 @@ class Env:
         obstacleMap = self.obstacleMap
         obstacleViewedMap = np.copy(obstacleMap)
         for agent in self.agents:
-            obstacleViewedMap = vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
+            obstacleViewedMap = self.vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
         
         agentPos = [agent.getState()[0] for agent in self.agents]
         gPos = self.cartesian2Grid(agentPos)
@@ -79,6 +81,7 @@ class Env:
     def reset(self):
         
         # need to update initial state for reset function
+        self.obstacleMap , self.vsb = self.setRandMap_vsb()
         self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents = self.initTotalArea_agents(CONST.NUM_AGENTS)
 
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
@@ -144,7 +147,7 @@ class Env:
         agentPos, agentVel = self.stepAgent(agentActions)
         gPos = self.cartesian2Grid(agentPos)
         # get new visibility and update obsPlusViewed
-        self.obsPlusViewed = vsb.updateVsbPolyOnImg(agentPos,self.obsPlusViewed)
+        self.obsPlusViewed = self.vsb.updateVsbPolyOnImg(agentPos,self.obsPlusViewed)
         # update position on currentMapState
         self.currentMapState = self.updatePosMap(gPos, self.obsPlusViewed)
         display = self.currentMapState
