@@ -13,6 +13,7 @@ import random as rand
 import matplotlib.pyplot as plt
 
 import SimpleNNagent as sNN
+import simpleCNNagent as cNN
 from constants import CONSTANTS
 CONST = CONSTANTS()
 
@@ -59,8 +60,13 @@ def getKeyPress(act):
 
 
 env = Env()
-rlAgent = sNN.SimpleNNagent(env)
-NUM_EPISODES = 3000
+
+
+#rlAgent = sNN.SimpleNNagent(env)
+rlAgent = cNN.SimplecNNagent(env)
+
+
+NUM_EPISODES = 6000
 LEN_EPISODES = 25
 curState = []
 newState= []
@@ -72,7 +78,7 @@ dispFlag = False
 
 curRawState = env.reset()
 curState = rlAgent.formatInput(curRawState)
-rlAgent.summaryWriter_showNetwork(curState[0])
+#rlAgent.summaryWriter_showNetwork(curState[0])
 
 keyPress = 1
 a = time.time()

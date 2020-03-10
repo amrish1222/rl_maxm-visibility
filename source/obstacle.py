@@ -20,9 +20,9 @@ class Obstacle:
         obsMaps = []
         vsbs = []
         
-        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle1())
-        obsMaps.append(mp)
-        vsbs.append(vsb)
+#        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle1())
+#        obsMaps.append(mp)
+#        vsbs.append(vsb)
         
         mp, vsb = self.getObstacleMap(emptyMap, self.obstacle2())
         obsMaps.append(mp)
