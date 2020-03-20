@@ -86,8 +86,8 @@ class SimplecNNagent():
         
     def trainModel(self):
         self.model.train()
-        X = torch.from_numpy(self.trainX).to(self.device)
-        Y = torch.from_numpy(self.trainY).to(self.device)
+        X = self.trainX
+        Y = self.trainY
         for i in range(1): # number epoch
             self.optimizer.zero_grad()
             predY = self.model(X.float())
@@ -140,8 +140,8 @@ class SimplecNNagent():
             self.doneList.pop(0)
             self.rwdList.pop(0)
         
-        self.curState.append(currentState)
-        self.nxtState.append(nextState)
+        self.curState.append(torch.from_numpy(currentState).to(self.device))
+        self.nxtState.append(torch.from_numpy(nextState).to(self.device))
         self.actnList.append(action)
         self.doneList.append(done)
         self.rwdList.append(reward)
@@ -170,10 +170,10 @@ class SimplecNNagent():
         
 
         self.model.eval()
-        X = torch.from_numpy(n).to(self.device)
+        X = n
         qVal_n = self.model(X.float()).cpu().detach().numpy()
         qMax_n = np.max(qVal_n, axis  = 1)
-        X = torch.from_numpy(c).to(self.device)
+        X = c
         qVal_c = self.model(X.float()).cpu().detach().numpy()
         Y = copy.deepcopy(qVal_c)
         y = np.zeros(r.shape)
