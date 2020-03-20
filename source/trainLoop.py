@@ -143,7 +143,7 @@ for episode in tqdm(range(NUM_EPISODES)):
             b = time.time()
             times.append(["Train", round(1000*(b-a),0)])
         
-        print(times)
+#        print(times)
         
         # record history
 #        reward = sum(rewardList)

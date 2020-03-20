@@ -159,7 +159,6 @@ class SimplecNNagent():
         else:
             ndxs = range(len(self.curState))
        
-        bSize = len(ndxs)   
         
         c = np.asanyarray(np.array(itemgetter(*ndxs)(self.curState)))
         n = np.asanyarray(np.array(itemgetter(*ndxs)(self.nxtState)))
