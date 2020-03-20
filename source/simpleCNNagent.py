@@ -174,7 +174,7 @@ class SimplecNNagent():
         X = torch.from_numpy(n).to(self.device)
         qVal_n = self.model(X.float()).cpu().detach().numpy()
         qMax_n = np.max(qVal_n, axis  = 1)
-        X = torch.from_numpy(n).to(self.device)
+        X = torch.from_numpy(c).to(self.device)
         qVal_c = self.model(X.float()).cpu().detach().numpy()
         Y = copy.deepcopy(qVal_c)
         y = np.zeros(r.shape)
