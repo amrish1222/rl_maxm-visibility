@@ -160,8 +160,8 @@ class SimplecNNagent():
             ndxs = range(len(self.curState))
        
         
-        c = np.asanyarray(np.array(itemgetter(*ndxs)(self.curState)))
-        n = np.asanyarray(np.array(itemgetter(*ndxs)(self.nxtState)))
+        c = torch.stack(itemgetter(*ndxs)(self.curState))
+        n = torch.stack(itemgetter(*ndxs)(self.nxtState))
         r = np.asanyarray(np.array(itemgetter(*ndxs)(self.rwdList)))
         d = np.asanyarray(np.array(itemgetter(*ndxs)(self.doneList)))
         a_ = np.array(itemgetter(*ndxs)(self.actnList))
@@ -183,7 +183,7 @@ class SimplecNNagent():
         y[ndx] = r[ndx] + self.discount * qMax_n[ndx]
         Y[a[0],a[1]] = y
         self.trainX = c
-        self.trainY = Y
+        self.trainY = torch.from_numpy(Y).to(self.device)
 
         return skMSE(Y,qVal_c)
         
