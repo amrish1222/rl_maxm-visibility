@@ -63,7 +63,7 @@ class SimplecNNagent():
         self.maxReplayMemory = 15000
         self.epsilon = 1
         self.minEpsilon = 0.1
-        self.epsilonDecay = 0.9995
+        self.epsilonDecay = 0.9999539
         self.discount = 0.95
         self.learningRate = 0.0000001
         self.batchSize = 32
