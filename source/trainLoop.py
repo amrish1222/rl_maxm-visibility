@@ -104,7 +104,7 @@ for episode in tqdm(range(NUM_EPISODES)):
         if keyPress == 1:
             env.render()
         
-        if episode%500 in range(10,15):
+        if episode%500 in range(10,15) and step%4 == 0:
             env.save2Vid()
             
         # Get agent actions

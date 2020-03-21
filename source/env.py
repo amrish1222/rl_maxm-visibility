@@ -27,8 +27,8 @@ class Env:
         self.obstacleMap , self.vsb = self.setRandMap_vsb()
         self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents = self.initTotalArea_agents(CONST.NUM_AGENTS)
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
-        self.forcc = cv2.VideoWriter_fourcc(*"MJPG")
-        self.out = cv2.VideoWriter(f"checkpoints/cnn1.avi",self.forcc, 50, (700,700))
+        self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        self.out = cv2.VideoWriter(f"checkpoints/cnn1.avi",self.fourcc, 50, (700,700))
     
     def initObsMaps_Vsbs(self):
         return obsMap.getAllObs_vsbs(np.zeros((50,50)))
