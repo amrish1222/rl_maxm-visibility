@@ -66,7 +66,7 @@ env = Env()
 rlAgent = cNN.SimplecNNagent(env)
 
 
-NUM_EPISODES = 6000
+NUM_EPISODES = 50000
 LEN_EPISODES = 25
 curState = []
 newState= []
@@ -103,7 +103,9 @@ for episode in tqdm(range(NUM_EPISODES)):
         
         if keyPress == 1:
             env.render()
-            
+        
+        if episode%500 in range(10,15):
+            env.save2Vid()
             
         # Get agent actions
         aActions = []
@@ -209,5 +211,6 @@ for episode in tqdm(range(NUM_EPISODES)):
             
     
 rlAgent.saveModel("checkpoints")
+env.out.release()
         
             
