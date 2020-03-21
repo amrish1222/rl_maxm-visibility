@@ -24,13 +24,13 @@ class agentModelFC1(nn.Module):
         
         self.device = device
         
-        self.conv1 = torch.nn.Conv2d(1, 8, kernel_size=8, stride=4, padding=1)
-        self.conv2 = torch.nn.Conv2d(8, 16, kernel_size=4, stride=2, padding=1)
-        self.conv3 = torch.nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1)
+        self.conv1 = torch.nn.Conv2d(1, 16, kernel_size=8, stride=4, padding=1)
+        self.conv2 = torch.nn.Conv2d(16, 32, kernel_size=4, stride=2, padding=1)
+        self.conv3 = torch.nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=1)
 #        self.pool = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         
         
-        self.fc1 = nn.Linear(in_features = (6*6*16), out_features = 256)
+        self.fc1 = nn.Linear(in_features = (6*6*32), out_features = 256)
         self.fc2 = nn.Linear(in_features = 256, out_features = len(env.getActionSpace()))
 
     
