@@ -65,6 +65,7 @@ env = Env()
 rlAgent = cNN.SimplecNNagent(env)
 
 rlAgent.loadModel("checkpoints/testCNNmultiMap.pt")
+
 NUM_EPISODES = 3000
 LEN_EPISODES = 100
 curState = []
