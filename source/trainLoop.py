@@ -13,6 +13,7 @@ import random as rand
 import matplotlib.pyplot as plt
 
 import SimpleNNagent as sNN
+import simpleCNNagent as cNN
 from constants import CONSTANTS
 CONST = CONSTANTS()
 
@@ -51,16 +52,21 @@ def getKeyPressOld(act):
     return act
 
 def getKeyPress(act):
-    if keyboard.is_pressed('['):
-        act = 1
-    elif keyboard.is_pressed(']'):
-        act = 2
+#    if keyboard.is_pressed('['):
+#        act = 1
+#    elif keyboard.is_pressed(']'):
+#        act = 2
     return act
 
 
 env = Env()
-rlAgent = sNN.SimpleNNagent(env)
-NUM_EPISODES = 3000
+
+
+#rlAgent = sNN.SimpleNNagent(env)
+rlAgent = cNN.SimplecNNagent(env)
+
+
+NUM_EPISODES = 50000
 LEN_EPISODES = 25
 curState = []
 newState= []
@@ -72,9 +78,9 @@ dispFlag = False
 
 curRawState = env.reset()
 curState = rlAgent.formatInput(curRawState)
-rlAgent.summaryWriter_showNetwork(curState[0])
+#rlAgent.summaryWriter_showNetwork(curState[0])
 
-keyPress = 1
+keyPress = 0
 a = time.time()
 
 for episode in tqdm(range(NUM_EPISODES)):
@@ -97,7 +103,9 @@ for episode in tqdm(range(NUM_EPISODES)):
         
         if keyPress == 1:
             env.render()
-            
+        
+        if episode%500 in range(10,15) and step%4 == 0:
+            env.save2Vid()
             
         # Get agent actions
         aActions = []
@@ -203,5 +211,6 @@ for episode in tqdm(range(NUM_EPISODES)):
             
     
 rlAgent.saveModel("checkpoints")
+env.out.release()
         
             

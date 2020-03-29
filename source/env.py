@@ -28,6 +28,8 @@ class Env:
         self.obstacleMap , self.vsb = self.setRandMap_vsb()
         self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
+        self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        self.out = cv2.VideoWriter(f"checkpoints/cnn1.avi",self.fourcc, 50, (700,700))
     
     def initObsMaps_Vsbs(self):
         return obsMap.getAllObs_vsbs(np.zeros((50,50)))
@@ -51,14 +53,16 @@ class Env:
         x,y = np.nonzero(obstacleMap == 0)
         ndxs = random.sample(range(x.shape[0]), CONST.NUM_AGENTS + CONST.NUM_ADVRSRY)
         
-        for ndx in ndxs[:-(CONST.NUM_ADVRSRY)]:
-            agents.append(Agent(x[ndx]+0.5, y[ndx]+0.5))
-#            agents.append(Agent())
         
         adversaries = []
         for ndx in ndxs[-(CONST.NUM_ADVRSRY):]:
             adversaries.append(Adversary(x[ndx]+0.5, y[ndx]+0.5))
 #            adversaries.append(Adversary(25.5,10.5))
+
+        for ndx in ndxs:
+            agents.append(Agent(x[ndx]+0.5, y[ndx]+0.5))
+#            agents.append(Agent())
+
                    
         for agent in agents:
             obstacleViewedMap = self.vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
@@ -200,10 +204,23 @@ class Env:
         displayImg = cv2.resize(bgr,(700,700),interpolation = cv2.INTER_AREA)
         
         cv2.imshow("Position Map", displayImg)
-#        cv2.imshow("raw", cv2.resize(img,(700,700),interpolation = cv2.INTER_AREA))
         cv2.waitKey(1)
-        pass
     
+    def save2Vid(self):
+        img = np.copy(self.currentMapState)
+        img = np.rot90(img,1)
+        r = np.where(img==150, 255, 0)
+        g = np.where(img==100, 255, 0)
+        
+        b = np.zeros_like(img)
+        b_n = np.where(img==255, 100, 0)
+        bgr = np.stack((b,g,r),axis = 2)
+        bgr[:,:,0] = b_n
+        displayImg = cv2.resize(bgr,(700,700),interpolation = cv2.INTER_AREA)
+        
+        self.out.write(displayImg.astype('uint8'))
+#        cv2.imshow("raw", displayImg)
+#        cv2.waitKey(1)
             
     def updatePosMap(self, gPos, obsPlusViewed, val):
         currMapState = np.copy(obsPlusViewed)

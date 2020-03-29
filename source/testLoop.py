@@ -13,6 +13,7 @@ import random as rand
 import matplotlib.pyplot as plt
 
 import SimpleNNagent as sNN
+import simpleCNNagent as cNN
 from constants import CONSTANTS
 CONST = CONSTANTS()
 
@@ -59,8 +60,12 @@ def getKeyPress(act):
 
 
 env = Env()
-rlAgent = sNN.SimpleNNagent(env)
-rlAgent.loadModel("checkpoints/testFC2AdversaryMultiPt.pt")
+
+#rlAgent = sNN.SimpleNNagent(env)
+rlAgent = cNN.SimplecNNagent(env)
+
+rlAgent.loadModel("checkpoints/testCNNmultiMap.pt")
+
 NUM_EPISODES = 3000
 LEN_EPISODES = 100
 curState = []
