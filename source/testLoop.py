@@ -40,7 +40,7 @@ def waitKeyPress():
 
 def getKeyPressOld(act):
     k = cv2.waitKeyEx(1) 
-    #            print(k)
+#    print(k)
     if k == 2490368:
         act = 1
     elif k == 2424832:

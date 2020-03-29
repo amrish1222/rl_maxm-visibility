@@ -52,17 +52,15 @@ class Env:
         agents = []
         x,y = np.nonzero(obstacleMap == 0)
         ndxs = random.sample(range(x.shape[0]), CONST.NUM_AGENTS + CONST.NUM_ADVRSRY)
-        
-        
+
+        for ndx in ndxs[:-(CONST.NUM_ADVRSRY)]:
+            agents.append(Agent(x[ndx]+0.5, y[ndx]+0.5))
+#            agents.append(Agent())
+
         adversaries = []
         for ndx in ndxs[-(CONST.NUM_ADVRSRY):]:
             adversaries.append(Adversary(x[ndx]+0.5, y[ndx]+0.5))
 #            adversaries.append(Adversary(25.5,10.5))
-
-        for ndx in ndxs:
-            agents.append(Agent(x[ndx]+0.5, y[ndx]+0.5))
-#            agents.append(Agent())
-
                    
         for agent in agents:
             obstacleViewedMap = self.vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
@@ -236,7 +234,7 @@ class Env:
         
         if AdvVisibility:
             reward += -10
-#            print("Visible")
+            print("Visible")
         else:
 #            print("Not Visible")
             pass
