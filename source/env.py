@@ -234,7 +234,7 @@ class Env:
         
         if AdvVisibility:
             reward += -10
-            print("Visible")
+#            print("Visible")
         else:
 #            print("Not Visible")
             pass
