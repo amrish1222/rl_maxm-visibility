@@ -214,6 +214,12 @@ class Env:
         b_n = np.where(img==255, 100, 0)
         bgr = np.stack((b,g,r),axis = 2)
         bgr[:,:,0] = b_n
+        
+        # adversary Pos
+        advPos = np.where(img == 200)
+        bgr[advPos[0], advPos[1],1] = 255
+        bgr[advPos[0], advPos[1],2] = 255
+        
         displayImg = cv2.resize(bgr,(700,700),interpolation = cv2.INTER_AREA)
         
         self.out.write(displayImg.astype('uint8'))
