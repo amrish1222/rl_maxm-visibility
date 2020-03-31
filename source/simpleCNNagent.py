@@ -24,13 +24,13 @@ class agentModelFC1(nn.Module):
         
         self.device = device
         
-        self.conv1 = torch.nn.Conv2d(1, 8, kernel_size=8, stride=4, padding=1)
-        self.conv2 = torch.nn.Conv2d(8, 16, kernel_size=4, stride=2, padding=1)
-        self.conv3 = torch.nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1)
+        self.conv1 = torch.nn.Conv2d(1, 16, kernel_size=8, stride=4, padding=1)
+        self.conv2 = torch.nn.Conv2d(16, 32, kernel_size=4, stride=2, padding=1)
+        self.conv3 = torch.nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=1)
 #        self.pool = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         
         
-        self.fc1 = nn.Linear(in_features = (6*6*16), out_features = 256)
+        self.fc1 = nn.Linear(in_features = (6*6*32), out_features = 256)
         self.fc2 = nn.Linear(in_features = 256, out_features = len(env.getActionSpace()))
 
     
@@ -60,10 +60,10 @@ class SimplecNNagent():
         self.actnList = []
         self.trainX = []
         self.trainY = []
-        self.maxReplayMemory = 15000
+        self.maxReplayMemory = 3000
         self.epsilon = 1
         self.minEpsilon = 0.1
-        self.epsilonDecay = 0.9995
+        self.epsilonDecay = 0.9999539
         self.discount = 0.95
         self.learningRate = 0.0000001
         self.batchSize = 32
@@ -86,8 +86,8 @@ class SimplecNNagent():
         
     def trainModel(self):
         self.model.train()
-        X = torch.from_numpy(self.trainX).to(self.device)
-        Y = torch.from_numpy(self.trainY).to(self.device)
+        X = self.trainX
+        Y = self.trainY
         for i in range(1): # number epoch
             self.optimizer.zero_grad()
             predY = self.model(X.float())
@@ -140,8 +140,8 @@ class SimplecNNagent():
             self.doneList.pop(0)
             self.rwdList.pop(0)
         
-        self.curState.append(currentState)
-        self.nxtState.append(nextState)
+        self.curState.append(torch.from_numpy(currentState).to(self.device))
+        self.nxtState.append(torch.from_numpy(nextState).to(self.device))
         self.actnList.append(action)
         self.doneList.append(done)
         self.rwdList.append(reward)
@@ -160,8 +160,8 @@ class SimplecNNagent():
             ndxs = range(len(self.curState))
        
         
-        c = np.asanyarray(np.array(itemgetter(*ndxs)(self.curState)))
-        n = np.asanyarray(np.array(itemgetter(*ndxs)(self.nxtState)))
+        c = torch.stack(itemgetter(*ndxs)(self.curState))
+        n = torch.stack(itemgetter(*ndxs)(self.nxtState))
         r = np.asanyarray(np.array(itemgetter(*ndxs)(self.rwdList)))
         d = np.asanyarray(np.array(itemgetter(*ndxs)(self.doneList)))
         a_ = np.array(itemgetter(*ndxs)(self.actnList))
@@ -170,10 +170,10 @@ class SimplecNNagent():
         
 
         self.model.eval()
-        X = torch.from_numpy(n).to(self.device)
+        X = n
         qVal_n = self.model(X.float()).cpu().detach().numpy()
         qMax_n = np.max(qVal_n, axis  = 1)
-        X = torch.from_numpy(c).to(self.device)
+        X = c
         qVal_c = self.model(X.float()).cpu().detach().numpy()
         Y = copy.deepcopy(qVal_c)
         y = np.zeros(r.shape)
@@ -183,7 +183,7 @@ class SimplecNNagent():
         y[ndx] = r[ndx] + self.discount * qMax_n[ndx]
         Y[a[0],a[1]] = y
         self.trainX = c
-        self.trainY = Y
+        self.trainY = torch.from_numpy(Y).to(self.device)
 
         return skMSE(Y,qVal_c)
         

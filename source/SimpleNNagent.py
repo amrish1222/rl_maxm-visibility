@@ -46,12 +46,12 @@ class SimpleNNagent():
         self.actnList = []
         self.trainX = []
         self.trainY = []
-        self.maxReplayMemory = 12000
+        self.maxReplayMemory = 3000
         self.epsilon = 1.0
-        self.minEpsilon = 0.01
-        self.epsilonDecay = 0.998
+        self.minEpsilon = 0.1
+        self.epsilonDecay = 0.9995
         self.discount = 0.95
-        self.learningRate = 0.000001
+        self.learningRate = 0.0000001
         self.batchSize = 32
         self.envActions = env.getActionSpace()
         self.nActions = len(self.envActions)

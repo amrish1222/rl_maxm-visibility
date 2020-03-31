@@ -153,5 +153,14 @@ class Visibility:
         # adding the obstacles back
 #        temp = np.where(img == 150, 150, temp)
         return temp
+    
+    def checkPtInVsbPoly(self, pt, checkPt):
+        vsbPoly = self.getVisibilityPolygon(pt[0])
+#        print(pt[0])
+       
+        points = [checkPt[0]]
+        p = Path(vsbPoly.coords)
+        canSee = p.contains_points(points)
+        return canSee
         
         
