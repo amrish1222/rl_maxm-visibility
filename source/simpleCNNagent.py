@@ -148,7 +148,7 @@ class SimplecNNagent():
         self.rwdList.append(reward)
     
     def buildMiniBatchTrainData(self):
-        
+
         c = []
         n = []
         r = []
@@ -161,21 +161,27 @@ class SimplecNNagent():
             ndxs = range(len(self.curState))
        
         
-        c = torch.stack(itemgetter(*ndxs)(self.curState))
-        n = torch.stack(itemgetter(*ndxs)(self.nxtState))
+        c = itemgetter(*ndxs)(self.curState)
+        n = itemgetter(*ndxs)(self.nxtState)
         r = np.asanyarray(np.array(itemgetter(*ndxs)(self.rwdList)))
         d = np.asanyarray(np.array(itemgetter(*ndxs)(self.doneList)))
         a_ = np.array(itemgetter(*ndxs)(self.actnList))
         aTemp = np.vstack((np.array(range(len(a_))),a_))
         a = np.asanyarray(aTemp)
         
-
+        # sending current states and next states together for inference
+        X = torch.stack(n+c)
+        
         self.model.eval()
-        X = n
-        qVal_n = self.model(X.float()).cpu().detach().numpy()
+        
+        qVal = self.model(X.float()).cpu().detach().numpy()
+        
+        # splitting them to get the current and next states
+        hIndx = self.batchSize
+        qVal_n = qVal[:hIndx]
         qMax_n = np.max(qVal_n, axis  = 1)
-        X = c
-        qVal_c = self.model(X.float()).cpu().detach().numpy()
+        qVal_c = qVal[hIndx:]
+
         Y = copy.deepcopy(qVal_c)
         y = np.zeros(r.shape)
         ndx = np.where(d == True)
@@ -183,9 +189,9 @@ class SimplecNNagent():
         ndx = np.where(d == False)
         y[ndx] = r[ndx] + self.discount * qMax_n[ndx]
         Y[a[0],a[1]] = y
-        self.trainX = c
+        self.trainX = X[hIndx:]
         self.trainY = torch.from_numpy(Y).to(self.device)
-
+        
         return skMSE(Y,qVal_c)
         
     def saveModel(self, filePath):
