@@ -7,6 +7,7 @@ Created on Sun Nov  14 09:45:29 2019
 """
 import random
 import numpy as np
+from statistics import mean 
 import copy
 from operator import itemgetter 
 from sklearn.metrics import mean_squared_error as skMSE
@@ -208,12 +209,23 @@ class SimplecNNagent():
         X = torch.tensor(list(curr_state)).to(self.device)
         self.sw.add_graph(self.model, X, False)
     
-    def summaryWriter_addMetrics(self, episode, loss, reward, last100Rwd, lenEpisode):
-        self.sw.add_scalar('5.Loss', loss, episode)
+    def summaryWriter_addMetrics(self, episode, loss, reward, last100Rwd, mapRwdDict, lenEpisode):
+        self.sw.add_scalar('6.Loss', loss, episode)
         self.sw.add_scalar('3.Reward', reward, episode)
-        self.sw.add_scalar('4.Episode Length', lenEpisode, episode)
+        self.sw.add_scalar('5.Episode Length', lenEpisode, episode)
         self.sw.add_scalar('2.Epsilon', self.epsilon, episode)
         self.sw.add_scalar('1.Average of Last 100 episodes', last100Rwd, episode)
+        
+        for item in mapRwdDict:
+            title ='4. Map ' + str(item + 1)
+            if len(mapRwdDict[item]) > 100:
+                avg_newArea, avg_penalty =  zip(*mapRwdDict[item][-100:])
+                avg_newArea, avg_penalty = mean(avg_newArea), mean(avg_penalty)
+            else:
+                avg_newArea, avg_penalty =  zip(*mapRwdDict[item])
+                avg_newArea = mean(avg_newArea)
+                avg_penalty = mean(avg_penalty)
+            self.sw.add_scalars(title,{'Total Reward':last100Rwd,'New Area':avg_newArea,'Penalty': avg_penalty}, len(mapRwdDict[item])-1)
         
     def summaryWriter_close(self):
         self.sw.close()

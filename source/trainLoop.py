@@ -11,6 +11,7 @@ from tqdm import tqdm
 import cv2
 import random as rand
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
 import SimpleNNagent as sNN
 import simpleCNNagent as cNN
@@ -72,6 +73,7 @@ curState = []
 newState= []
 reward_history = []
 reward_last100 = []
+mapNewVisPenalty_history = defaultdict(list)
 loss_history = []
 totalViewed = []
 dispFlag = False
@@ -95,6 +97,8 @@ for episode in tqdm(range(NUM_EPISODES)):
     
     episodeReward  = 0
     epidoseLoss = 0
+    episodeNewVisited = 0
+    episodePenalty = 0
     
     for step in range(LEN_EPISODES):
         times = []
@@ -115,7 +119,7 @@ for episode in tqdm(range(NUM_EPISODES)):
         
         # do actions
         a = time.time()
-        agentPosList, display, reward, done = env.step(aActions)
+        agentPosList, display, reward, newAreaVis, penalty, done = env.step(aActions)
         b = time.time()
         times.append(["Step", round(1000*(b-a),0)])
         # update nextState
@@ -152,6 +156,9 @@ for episode in tqdm(range(NUM_EPISODES)):
         episodeReward += reward
         epidoseLoss += loss
         
+        episodeNewVisited += newAreaVis
+        episodePenalty += penalty
+        
         # set current state for next step
         
         curState = newState
@@ -179,11 +186,12 @@ for episode in tqdm(range(NUM_EPISODES)):
         reward_last100.append(sum(reward_history[-100:])/100)
     reward_history.append(episodeReward)
     loss_history.append(epidoseLoss)
+    mapNewVisPenalty_history[env.mapId].append((episodeNewVisited,episodePenalty))
     totalViewed.append(np.count_nonzero(display==255))
     
     # You may want to plot periodically instead of after every episode
     # Otherwise, things will slow
-    rlAgent.summaryWriter_addMetrics(episode, epidoseLoss, episodeReward, reward_last100[-1], LEN_EPISODES)
+    rlAgent.summaryWriter_addMetrics(episode, epidoseLoss, episodeReward, reward_last100[-1], mapNewVisPenalty_history, LEN_EPISODES)
     if episode % 50 == 0:
         if dispFlag:
             fig = plt.figure(2)
