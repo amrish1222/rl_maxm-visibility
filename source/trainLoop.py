@@ -156,7 +156,7 @@ for episode in tqdm(range(NUM_EPISODES)):
     # Record history        
     reward_history.append(episodeReward)
     loss_history.append(epidoseLoss)
-    mapNewVisPenalty_history[env.mapId].append((episodeNewVisited,episodePenalty))
+    mapNewVisPenalty_history[env.mapId].append((episodeReward,episodeNewVisited,episodePenalty))
 #    totalViewed.append(np.count_nonzero(display==255))
     
     # You may want to plot periodically instead of after every episode
