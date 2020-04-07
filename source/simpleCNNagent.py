@@ -231,13 +231,13 @@ class SimplecNNagent():
         for item in mapRwdDict:
             title ='4. Map ' + str(item + 1)
             if len(mapRwdDict[item]) >= 100:
-                avg_totalReward,avg_newArea, avg_penalty =  zip(*mapRwdDict[item][-100:])
-                avg_totalReward,avg_newArea, avg_penalty = mean(avg_totalReward), mean(avg_newArea), mean(avg_penalty)
+                avg_mapReward,avg_newArea, avg_penalty =  zip(*mapRwdDict[item][-100:])
+                avg_mapReward,avg_newArea, avg_penalty = mean(avg_mapReward), mean(avg_newArea), mean(avg_penalty)
             else:
-                avg_totalReward,avg_newArea, avg_penalty =  zip(*mapRwdDict[item])
-                avg_totalReward,avg_newArea, avg_penalty = mean(avg_totalReward), mean(avg_newArea), mean(avg_penalty)
+                avg_mapReward,avg_newArea, avg_penalty =  zip(*mapRwdDict[item])
+                avg_mapReward,avg_newArea, avg_penalty = mean(avg_mapReward), mean(avg_newArea), mean(avg_penalty)
 
-            self.sw.add_scalars(title,{'Total Reward':avg_totalReward,'New Area':avg_newArea,'Penalty': avg_penalty}, len(mapRwdDict[item])-1)
+            self.sw.add_scalars(title,{'Total Reward':avg_mapReward,'New Area':avg_newArea,'Penalty': avg_penalty}, len(mapRwdDict[item])-1)
             
     def summaryWriter_close(self):
         self.sw.close()
