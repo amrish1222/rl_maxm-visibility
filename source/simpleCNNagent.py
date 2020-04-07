@@ -215,24 +215,30 @@ class SimplecNNagent():
         X = torch.tensor(list(curr_state)).to(self.device)
         self.sw.add_graph(self.model, X, False)
     
-    def summaryWriter_addMetrics(self, episode, loss, reward, last100Rwd, mapRwdDict, lenEpisode):
+    def summaryWriter_addMetrics(self, episode, loss, rewardHistory, mapRwdDict, lenEpisode):
         self.sw.add_scalar('6.Loss', loss, episode)
-        self.sw.add_scalar('3.Reward', reward, episode)
+        self.sw.add_scalar('3.Reward', rewardHistory[-1], episode)
         self.sw.add_scalar('5.Episode Length', lenEpisode, episode)
         self.sw.add_scalar('2.Epsilon', self.epsilon, episode)
-        self.sw.add_scalar('1.Average of Last 100 episodes', last100Rwd, episode)
+        
+        if len(rewardHistory)>=100:
+            avg_reward = rewardHistory[-100:]
+            avg_reward = mean(avg_reward)
+        else:    
+            avg_reward = mean(rewardHistory) 
+        self.sw.add_scalar('1.Average of Last 100 episodes', avg_reward, episode)
         
         for item in mapRwdDict:
             title ='4. Map ' + str(item + 1)
-            if len(mapRwdDict[item]) > 100:
-                avg_newArea, avg_penalty =  zip(*mapRwdDict[item][-100:])
-                avg_newArea, avg_penalty = mean(avg_newArea), mean(avg_penalty)
+            if len(mapRwdDict[item]) >= 100:
+                avg_mapReward,avg_newArea, avg_penalty =  zip(*mapRwdDict[item][-100:])
+                avg_mapReward,avg_newArea, avg_penalty = mean(avg_mapReward), mean(avg_newArea), mean(avg_penalty)
             else:
-                avg_newArea, avg_penalty =  zip(*mapRwdDict[item])
-                avg_newArea = mean(avg_newArea)
-                avg_penalty = mean(avg_penalty)
-            self.sw.add_scalars(title,{'Total Reward':last100Rwd,'New Area':avg_newArea,'Penalty': avg_penalty}, len(mapRwdDict[item])-1)
-        
+                avg_mapReward,avg_newArea, avg_penalty =  zip(*mapRwdDict[item])
+                avg_mapReward,avg_newArea, avg_penalty = mean(avg_mapReward), mean(avg_newArea), mean(avg_penalty)
+
+            self.sw.add_scalars(title,{'Total Reward':avg_mapReward,'New Area':avg_newArea,'Penalty': avg_penalty}, len(mapRwdDict[item])-1)
+            
     def summaryWriter_close(self):
         self.sw.close()
     

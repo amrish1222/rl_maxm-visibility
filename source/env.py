@@ -239,9 +239,12 @@ class Env:
         newAreaVis = self.prevUnviewedCount - curUnviewedCount
         self.prevUnviewedCount = curUnviewedCount
         
+        if newAreaVis < 0:
+            print("Error calculating newArea")
+        
         penalty = 0
         if AdvVisibility:
-            penalty += -10
+            penalty += -100
 #            print("Visible")
         else:
 #            print("Not Visible")
