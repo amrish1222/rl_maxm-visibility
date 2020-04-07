@@ -2,7 +2,6 @@
 
 import warnings
 warnings.filterwarnings('ignore')
-import time
 import keyboard
 
 import numpy as np
@@ -72,7 +71,6 @@ LEN_EPISODES = 25
 curState = []
 newState= []
 reward_history = []
-reward_last100 = []
 mapNewVisPenalty_history = defaultdict(list)
 loss_history = []
 totalViewed = []
@@ -83,14 +81,10 @@ curState = rlAgent.formatInput(curRawState)
 #rlAgent.summaryWriter_showNetwork(curState[0])
 
 keyPress = 0
-a = time.time()
 
 for episode in tqdm(range(NUM_EPISODES)):
     LEN_EPISODES = 25 + min(int(episode* 5 /50),100)
-    a = time.time()
     curRawState = env.reset()
-    b = time.time()
-#    print(["reset time = ", round(1000*(b-a),0)])
     
     # generate state for each agent
     curState = rlAgent.formatInput(curRawState)
@@ -101,7 +95,6 @@ for episode in tqdm(range(NUM_EPISODES)):
     episodePenalty = 0
     
     for step in range(LEN_EPISODES):
-        times = []
         # render environment after taking a step
         keyPress = getKeyPress(keyPress)
         
@@ -118,10 +111,8 @@ for episode in tqdm(range(NUM_EPISODES)):
             aActions.append(rlAgent.EpsilonGreedyPolicy(curState[i]))
         
         # do actions
-        a = time.time()
         agentPosList, display, reward, newAreaVis, penalty, done = env.step(aActions)
-        b = time.time()
-        times.append(["Step", round(1000*(b-a),0)])
+
         # update nextState
         newRawState = []
         for agentPos in agentPosList:
@@ -135,36 +126,21 @@ for episode in tqdm(range(NUM_EPISODES)):
         # train network
         loss = 0
         if len(rlAgent.curState) > rlAgent.batchSize:
-            a = time.time()
             
+            # creating the mini batch for training
             loss = rlAgent.buildMiniBatchTrainData()
-           
-            b = time.time()
-            times.append(["buidlBatch", round(1000*(b-a),0)])
             
-            a = time.time()
-            
+            #training using the mini batches
             rlAgent.trainModel()
             
-            b = time.time()
-            times.append(["Train", round(1000*(b-a),0)])
-        
-#        print(times)
-        
         # record history
-#        reward = sum(rewardList)
         episodeReward += reward
         epidoseLoss += loss
-        
         episodeNewVisited += newAreaVis
         episodePenalty += penalty
         
         # set current state for next step
-        
         curState = newState
-        
-#        print("pos", newRawState[0][0])
-#        print("action", aActions)
         
         if done:
             break
@@ -177,44 +153,16 @@ for episode in tqdm(range(NUM_EPISODES)):
 #        rlAgent.my_lr_scheduler.step()
     
     
-    # Record history
-    if len(reward_history) < 1:
-        reward_last100.append(0)
-    elif len(reward_history) <=100:
-        reward_last100.append(sum(reward_history)/ len(reward_history))
-    else:
-        reward_last100.append(sum(reward_history[-100:])/100)
+    # Record history        
     reward_history.append(episodeReward)
     loss_history.append(epidoseLoss)
     mapNewVisPenalty_history[env.mapId].append((episodeNewVisited,episodePenalty))
-    totalViewed.append(np.count_nonzero(display==255))
+#    totalViewed.append(np.count_nonzero(display==255))
     
     # You may want to plot periodically instead of after every episode
     # Otherwise, things will slow
-    rlAgent.summaryWriter_addMetrics(episode, epidoseLoss, episodeReward, reward_last100[-1], mapNewVisPenalty_history, LEN_EPISODES)
+    rlAgent.summaryWriter_addMetrics(episode, epidoseLoss, reward_history, mapNewVisPenalty_history, LEN_EPISODES)
     if episode % 50 == 0:
-        if dispFlag:
-            fig = plt.figure(2)
-            plt.clf()
-            plt.xlim([0,NUM_EPISODES])
-            plt.plot(reward_history,'ro')
-            plt.plot(totalViewed,'g.')
-            plt.plot(reward_last100)
-            plt.xlabel('Episode')
-            plt.ylabel('Reward')
-            plt.title('Reward Per Episode')
-            plt.pause(0.01)
-            fig.canvas.draw()
-            
-            fig = plt.figure(3)
-            plt.clf()
-            plt.xlim([0,NUM_EPISODES])
-            plt.plot(loss_history,'b.')
-            plt.xlabel('Episode')
-            plt.ylabel('Loss')
-            plt.title('Loss per episode')
-            plt.pause(0.01)
-            fig.canvas.draw()
         rlAgent.saveModel("checkpoints")
             
     
