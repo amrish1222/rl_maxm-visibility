@@ -7,6 +7,7 @@ Created on Sun Nov  14 09:45:29 2019
 """
 import random
 import numpy as np
+from statistics import mean 
 import copy
 from operator import itemgetter 
 from sklearn.metrics import mean_squared_error as skMSE
@@ -147,7 +148,7 @@ class SimplecNNagent():
         self.rwdList.append(reward)
     
     def buildMiniBatchTrainData(self):
-        
+
         c = []
         n = []
         r = []
@@ -160,21 +161,27 @@ class SimplecNNagent():
             ndxs = range(len(self.curState))
        
         
-        c = torch.stack(itemgetter(*ndxs)(self.curState))
-        n = torch.stack(itemgetter(*ndxs)(self.nxtState))
+        c = itemgetter(*ndxs)(self.curState)
+        n = itemgetter(*ndxs)(self.nxtState)
         r = np.asanyarray(np.array(itemgetter(*ndxs)(self.rwdList)))
         d = np.asanyarray(np.array(itemgetter(*ndxs)(self.doneList)))
         a_ = np.array(itemgetter(*ndxs)(self.actnList))
         aTemp = np.vstack((np.array(range(len(a_))),a_))
         a = np.asanyarray(aTemp)
         
-
+        # sending current states and next states together for inference
+        X = torch.stack(n+c)
+        
         self.model.eval()
-        X = n
-        qVal_n = self.model(X.float()).cpu().detach().numpy()
+        
+        qVal = self.model(X.float()).cpu().detach().numpy()
+        
+        # splitting them to get the current and next states
+        hIndx = self.batchSize
+        qVal_n = qVal[:hIndx]
         qMax_n = np.max(qVal_n, axis  = 1)
-        X = c
-        qVal_c = self.model(X.float()).cpu().detach().numpy()
+        qVal_c = qVal[hIndx:]
+
         Y = copy.deepcopy(qVal_c)
         y = np.zeros(r.shape)
         ndx = np.where(d == True)
@@ -182,9 +189,9 @@ class SimplecNNagent():
         ndx = np.where(d == False)
         y[ndx] = r[ndx] + self.discount * qMax_n[ndx]
         Y[a[0],a[1]] = y
-        self.trainX = c
+        self.trainX = X[hIndx:]
         self.trainY = torch.from_numpy(Y).to(self.device)
-
+        
         return skMSE(Y,qVal_c)
         
     def saveModel(self, filePath):
@@ -208,13 +215,30 @@ class SimplecNNagent():
         X = torch.tensor(list(curr_state)).to(self.device)
         self.sw.add_graph(self.model, X, False)
     
-    def summaryWriter_addMetrics(self, episode, loss, reward, last100Rwd, lenEpisode):
-        self.sw.add_scalar('5.Loss', loss, episode)
-        self.sw.add_scalar('3.Reward', reward, episode)
-        self.sw.add_scalar('4.Episode Length', lenEpisode, episode)
+    def summaryWriter_addMetrics(self, episode, loss, rewardHistory, mapRwdDict, lenEpisode):
+        self.sw.add_scalar('6.Loss', loss, episode)
+        self.sw.add_scalar('3.Reward', rewardHistory[-1], episode)
+        self.sw.add_scalar('5.Episode Length', lenEpisode, episode)
         self.sw.add_scalar('2.Epsilon', self.epsilon, episode)
-        self.sw.add_scalar('1.Average of Last 100 episodes', last100Rwd, episode)
         
+        if len(rewardHistory)>=100:
+            avg_reward = rewardHistory[-100:]
+            avg_reward = mean(avg_reward)
+        else:    
+            avg_reward = mean(rewardHistory) 
+        self.sw.add_scalar('1.Average of Last 100 episodes', avg_reward, episode)
+        
+        for item in mapRwdDict:
+            title ='4. Map ' + str(item + 1)
+            if len(mapRwdDict[item]) >= 100:
+                avg_mapReward,avg_newArea, avg_penalty =  zip(*mapRwdDict[item][-100:])
+                avg_mapReward,avg_newArea, avg_penalty = mean(avg_mapReward), mean(avg_newArea), mean(avg_penalty)
+            else:
+                avg_mapReward,avg_newArea, avg_penalty =  zip(*mapRwdDict[item])
+                avg_mapReward,avg_newArea, avg_penalty = mean(avg_mapReward), mean(avg_newArea), mean(avg_penalty)
+
+            self.sw.add_scalars(title,{'Total Reward':avg_mapReward,'New Area':avg_newArea,'Penalty': avg_penalty}, len(mapRwdDict[item])-1)
+            
     def summaryWriter_close(self):
         self.sw.close()
     

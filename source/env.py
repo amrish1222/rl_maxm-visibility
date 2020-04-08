@@ -25,7 +25,7 @@ class Env:
         self.isNewSess = True
         self.timeStep = CONST.TIME_STEP
         self.obsMaps, self.vsbs = self.initObsMaps_Vsbs()
-        self.obstacleMap , self.vsb = self.setRandMap_vsb()
+        self.obstacleMap , self.vsb, self.mapId = self.setRandMap_vsb()
         self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
         self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -36,7 +36,7 @@ class Env:
     
     def setRandMap_vsb(self):
         i = random.randint(0, len(self.obsMaps)-1)
-        return self.obsMaps[i], self.vsbs[i]
+        return self.obsMaps[i], self.vsbs[i], i
     
     def initTotalArea_agents(self, numAgents):
         # unviewed = 0
@@ -100,7 +100,7 @@ class Env:
     def reset(self):
         
         # need to update initial state for reset function
-        self.obstacleMap , self.vsb = self.setRandMap_vsb()
+        self.obstacleMap , self.vsb, self.mapId = self.setRandMap_vsb()
         self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
 
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
@@ -178,9 +178,10 @@ class Env:
         
         display = self.currentMapState
         # update reward mechanism
-        reward = self.getReward(AdvVisibility)
+        newAreaVis, penalty = self.getReward(AdvVisibility)
+        reward = newAreaVis + penalty
         done = np.count_nonzero(self.currentMapState==0) == 0
-        return agentPos, display, reward, done
+        return agentPos, display, reward, newAreaVis, penalty, done
                 
 
     def render(self):
@@ -235,17 +236,21 @@ class Env:
         
     def getReward(self, AdvVisibility):
         curUnviewedCount = np.count_nonzero(self.currentMapState==0)
-        reward = self.prevUnviewedCount - curUnviewedCount
+        newAreaVis = self.prevUnviewedCount - curUnviewedCount
         self.prevUnviewedCount = curUnviewedCount
         
+        if newAreaVis < 0:
+            print("Error calculating newArea")
+        
+        penalty = 0
         if AdvVisibility:
-            reward += -10
+            penalty += -100
 #            print("Visible")
         else:
 #            print("Not Visible")
             pass
             
-        return reward
+        return newAreaVis, penalty
         
     def cartesian2Grid(self, posList):
         gridList = []
