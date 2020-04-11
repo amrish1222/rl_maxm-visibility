@@ -27,6 +27,8 @@ class CONSTANTS:
         
         self.GRID_CENTER_PTS = self.getGridCenterPts()
         
+        self.SEPERATION_PENALTY = 10
+        
     def getGridCenterPts(self):
         x, y = np.meshgrid(np.arange(50), np.arange(50))
         x, y = x.flatten()+0.5, y.flatten() + 0.5
