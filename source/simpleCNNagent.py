@@ -25,7 +25,7 @@ class agentModelFC1(nn.Module):
         
         self.device = device
         
-        self.conv1 = torch.nn.Conv2d(1, 16, kernel_size=8, stride=4, padding=1)
+        self.conv1 = torch.nn.Conv2d(2, 16, kernel_size=8, stride=4, padding=1)
         self.conv2 = torch.nn.Conv2d(16, 32, kernel_size=4, stride=2, padding=1)
         self.conv3 = torch.nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=1)
 #        self.pool = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
@@ -206,8 +206,8 @@ class SimplecNNagent():
 #        for state in states:
 #            out.append(np.concatenate((state[0], state[1].flatten())))
         for state in states:
-            temp = state[1].reshape((1, state[1].shape[0], state[1].shape[1]))
-            temp.shape
+#            temp = state[1].reshape((1, state[1].shape[0], state[1].shape[1]))
+            temp = np.asarray(state[1])
             out.append(temp)
         return out
         
