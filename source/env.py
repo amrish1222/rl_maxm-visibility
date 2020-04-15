@@ -104,7 +104,6 @@ class Env:
         self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.advPosMap, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
 
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
-        self.advPosMap = np.zeros_like(self.currentMapState)
         state = []
         for agent in self.agents:
             state.append([agent.getState()[0],[self.currentMapState,self.advPosMap]])
@@ -172,7 +171,7 @@ class Env:
         
         advrsyPos = [adversary.getState()[0] for adversary in self.adversaries]
         advPos = self.cartesian2Grid(advrsyPos)
-        advPosMap = self.updatePosMap(advPos, np.zeros((50,50)), 200)
+        advPosMap = self.updatePosMap(advPos, self.advPosMap, 200)
         
         self.advPosMap = np.copy(advPosMap)
         AdvVisibility = self.vsb.checkPtInVsbPoly(advrsyPos, agentPos)
@@ -219,7 +218,8 @@ class Env:
         bgr[:,:,0] = b_n
         
         # adversary Pos
-        advPos = np.where(img == 200)
+        advPos = np.where(np.rot90(self.advPosMap,1) == 200)
+        bgr[advPos[0], advPos[1],0] = 0
         bgr[advPos[0], advPos[1],1] = 255
         bgr[advPos[0], advPos[1],2] = 255
         
