@@ -14,6 +14,7 @@ from collections import defaultdict
 
 import SimpleNNagent as sNN
 import simpleCNNagent as cNN
+import simpleCNN2agent as cNN2
 from constants import CONSTANTS
 CONST = CONSTANTS()
 
@@ -52,10 +53,10 @@ def getKeyPressOld(act):
     return act
 
 def getKeyPress(act):
-#    if keyboard.is_pressed('['):
-#        act = 1
-#    elif keyboard.is_pressed(']'):
-#        act = 2
+    if keyboard.is_pressed('['):
+        act = 1
+    elif keyboard.is_pressed(']'):
+        act = 2
     return act
 
 
@@ -63,7 +64,8 @@ env = Env()
 
 
 #rlAgent = sNN.SimpleNNagent(env)
-rlAgent = cNN.SimplecNNagent(env)
+#rlAgent = cNN.SimplecNNagent(env)
+rlAgent = cNN2.SimplecNNagent(env)
 
 
 NUM_EPISODES = 50000
@@ -80,7 +82,7 @@ curRawState = env.reset()
 curState = rlAgent.formatInput(curRawState)
 #rlAgent.summaryWriter_showNetwork(curState[0])
 
-keyPress = 0
+keyPress = 1
 
 for episode in tqdm(range(NUM_EPISODES)):
     LEN_EPISODES = 25 + min(int(episode* 5 /50),100)
