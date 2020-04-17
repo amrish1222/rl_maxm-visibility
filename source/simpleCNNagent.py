@@ -31,21 +31,22 @@ class agentModelFC1(nn.Module):
 #        self.pool = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         
         
-        self.fc1 = nn.Linear(in_features = (6*6*32), out_features = 256)
+        self.fc1 = nn.Linear(in_features = (6*6*32+2), out_features = 256)
         self.fc2 = nn.Linear(in_features = 256, out_features = len(env.getActionSpace()))
 
     
-    def forward(self, x):
+    def forward(self, x1, x2):
         
-        x = F.relu(self.conv1(x))
+        x1 = F.relu(self.conv1(x1))
         
-        x = F.relu(self.conv2(x))
+        x1 = F.relu(self.conv2(x1))
         
-        x = F.relu(self.conv3(x))
+        x1 = F.relu(self.conv3(x1))
         
 #        print(x.shape)
         
-        x = x.flatten(start_dim = 1)
+        x = torch.cat((x1.flatten(start_dim = 1), x2.resize_((x2.shape[0],x2.shape[-1]))), dim = 1)
+#        x = x.flatten(start_dim = 1)
         
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
@@ -91,7 +92,7 @@ class SimplecNNagent():
         Y = self.trainY
         for i in range(1): # number epoch
             self.optimizer.zero_grad()
-            predY = self.model(X.float())
+            predY = self.model(*X)
             loss = self.loss_fn(Y,predY)
             loss.backward()
             self.optimizer.step()
@@ -141,11 +142,20 @@ class SimplecNNagent():
             self.doneList.pop(0)
             self.rwdList.pop(0)
         
-        self.curState.append(torch.from_numpy(currentState).to(self.device))
-        self.nxtState.append(torch.from_numpy(nextState).to(self.device))
+        self.curState.append([torch.from_numpy(currentState[0]).to(self.device), torch.from_numpy(currentState[1]).to(self.device)])
+        self.nxtState.append([torch.from_numpy(nextState[0]).to(self.device), torch.from_numpy(nextState[1]).to(self.device)])
+        
+#        self.curState.append([currentState[0],currentState[1]])
+#        self.nxtState.append([nextState[0],nextState[1]])
+        
+#        self.nxtState.append(torch.from_numpy(nextState).to(self.device))
         self.actnList.append(action)
         self.doneList.append(done)
         self.rwdList.append(reward)
+    
+    def remove_col(arr, ith):
+        itg = itemgetter(*filter((ith).__ne__, range(len(arr[0]))))
+        return list(map(list, map(itg, arr)))
     
     def buildMiniBatchTrainData(self):
 
@@ -170,11 +180,16 @@ class SimplecNNagent():
         a = np.asanyarray(aTemp)
         
         # sending current states and next states together for inference
-        X = torch.stack(n+c)
+#        X = torch.stack(n+c)
+        res1 = list(map(itemgetter(0), n+c)) 
+        res2 = list(map(itemgetter(1), n+c))
+        t1 = torch.stack(res1).float()
+        t2 = torch.stack(res2).float()
+        X = (t1, t2)
         
         self.model.eval()
         
-        qVal = self.model(X.float()).cpu().detach().numpy()
+        qVal = self.model(*X).cpu().detach().numpy()
         
         # splitting them to get the current and next states
         hIndx = self.batchSize
@@ -189,7 +204,7 @@ class SimplecNNagent():
         ndx = np.where(d == False)
         y[ndx] = r[ndx] + self.discount * qMax_n[ndx]
         Y[a[0],a[1]] = y
-        self.trainX = X[hIndx:]
+        self.trainX = (t1[hIndx:], t2[hIndx:])
         self.trainY = torch.from_numpy(Y).to(self.device)
         
         return skMSE(Y,qVal_c)
@@ -206,9 +221,8 @@ class SimplecNNagent():
 #        for state in states:
 #            out.append(np.concatenate((state[0], state[1].flatten())))
         for state in states:
-            temp = state[1].reshape((1, state[1].shape[0], state[1].shape[1]))
-            temp.shape
-            out.append(temp)
+            temp = state[2].reshape((1, state[2].shape[0], state[2].shape[1]))
+            out.append([temp, state[1]-state[0]])
         return out
         
     def summaryWriter_showNetwork(self, curr_state):

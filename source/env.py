@@ -107,7 +107,7 @@ class Env:
         
         state = []
         for agent in self.agents:
-            state.append([agent.getState()[0],self.currentMapState])
+            state.append([agent.getState()[0], [adversary.getState()[0] for adversary in self.adversaries], self.currentMapState])
         
         return state
         
@@ -181,7 +181,7 @@ class Env:
         newAreaVis, penalty = self.getReward(AdvVisibility)
         reward = newAreaVis + penalty
         done = np.count_nonzero(self.currentMapState==0) == 0
-        return agentPos, display, reward, newAreaVis, penalty, done
+        return agentPos, advrsyPos, display, reward, newAreaVis, penalty, done
                 
 
     def render(self):

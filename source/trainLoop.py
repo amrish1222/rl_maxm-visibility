@@ -111,12 +111,12 @@ for episode in tqdm(range(NUM_EPISODES)):
             aActions.append(rlAgent.EpsilonGreedyPolicy(curState[i]))
         
         # do actions
-        agentPosList, display, reward, newAreaVis, penalty, done = env.step(aActions)
+        agentPosList, advrsyPosList, display, reward, newAreaVis, penalty, done = env.step(aActions)
 
         # update nextState
         newRawState = []
         for agentPos in agentPosList:
-            newRawState.append([agentPos, display])
+            newRawState.append([agentPos, advrsyPosList, display])
         newState = rlAgent.formatInput(newRawState)
         
         
