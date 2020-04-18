@@ -62,7 +62,7 @@ class SimplecNNagent():
         self.actnList = []
         self.trainX = []
         self.trainY = []
-        self.maxReplayMemory = 3000
+        self.maxReplayMemory = 15000
         self.epsilon = 1
         self.minEpsilon = 0.1
         self.epsilonDecay = 0.9999539
@@ -105,8 +105,10 @@ class SimplecNNagent():
             #ChooseMax
             #Handle multiple max
             self.model.eval()
-            X = torch.from_numpy(np.reshape(state, (1,)+state.shape)).to(self.device)
-            self.qValues = self.model(X.float()).cpu().detach().numpy()[0]
+            t1 = torch.from_numpy(state[0]).to(self.device).float().unsqueeze(0)
+            t2 = torch.from_numpy(state[1]).to(self.device).float().unsqueeze(0)
+            X = (t1,t2)
+            self.qValues = self.model(*X).cpu().detach().numpy()[0]
 #            print(".............X..........", self.qValues)
             action = np.random.choice(
                             np.where(self.qValues == np.max(self.qValues))[0]
