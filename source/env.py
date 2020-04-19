@@ -252,7 +252,7 @@ class Env:
 
         penalty = 0
         if AdvVisibility:
-            penalty += -50
+            penalty += -100
 #            print("Visible")
         else:
 #            print("Not Visible")

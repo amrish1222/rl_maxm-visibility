@@ -53,10 +53,10 @@ def getKeyPressOld(act):
     return act
 
 def getKeyPress(act):
-    if keyboard.is_pressed('['):
-        act = 1
-    elif keyboard.is_pressed(']'):
-        act = 2
+#    if keyboard.is_pressed('['):
+#        act = 1
+#    elif keyboard.is_pressed(']'):
+#        act = 2
     return act
 
 
@@ -82,7 +82,7 @@ curRawState = env.reset()
 curState = rlAgent.formatInput(curRawState)
 #rlAgent.summaryWriter_showNetwork(curState[0])
 
-keyPress = 1
+keyPress = 0
 
 for episode in tqdm(range(NUM_EPISODES)):
     LEN_EPISODES = 25 + min(int(episode* 5 /50),100)
