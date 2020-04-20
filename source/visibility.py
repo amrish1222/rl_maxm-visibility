@@ -154,13 +154,38 @@ class Visibility:
 #        temp = np.where(img == 150, 150, temp)
         return temp
     
+    def getVsbPoly(self, pt):
+        vsbPoly = self.getVisibilityPolygon(pt)
+        return vsbPoly.coords
+    
     def checkPtInVsbPoly(self, pt, checkPt):
         vsbPoly = self.getVisibilityPolygon(pt[0])
-#        print(pt[0])
        
         points = [checkPt[0]]
         p = Path(vsbPoly.coords)
         canSee = p.contains_points(points)
         return canSee
+    
+    def checkPtInVsbPolyDict(self, pt, checkPt, vsbPolyDict):
+       
+        points = [checkPt[0]]
+        p = pt[0]
+        p = Path(vsbPolyDict[(p[0],p[1])])
+        canSee = p.contains_points(points)
+        return canSee
+    
+    def updateVsbOnImg(self, pt, img, vsbPolyDict):
+        p = pt[0]
+        p = Path(vsbPolyDict[(p[0],p[1])])
+        points = CONST.GRID_CENTER_PTS
+        grid = p.contains_points(points)
+        mask = grid.reshape(50,50)
+        vsbGrid = mask.T
+        temp = np.copy(img)
+        # updating grid with matplotlib calculated visibility grid
+        temp = np.where(vsbGrid, 255, temp)
+        # adding the obstacles back
+#        temp = np.where(img == 150, 150, temp)
+        return temp
         
         
