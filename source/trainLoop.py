@@ -21,25 +21,6 @@ from time import time as tm
 
 np.set_printoptions(threshold = np.inf, linewidth = 1000 ,precision=3, suppress=True)
 
-def waitKeyPress():
-    wait = True
-    while(wait):
-        k = cv2.waitKeyEx(1) 
-        #            print(k)
-        if k == 2490368:
-            act = 1
-            wait = False
-        elif k == 2424832:
-            act = 2
-            wait = False
-        elif k == 2621440:
-            act = 3
-            wait = False
-        elif k == 2555904:
-            act = 4
-            wait = False
-    return act
-
 def getKeyPressOld(act):
     k = cv2.waitKeyEx(1) 
     #            print(k)

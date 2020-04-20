@@ -61,10 +61,10 @@ class SimplecNNagent():
         self.actnList = []
         self.trainX = []
         self.trainY = []
-        self.maxReplayMemory = 3000
+        self.maxReplayMemory = 15000
         self.epsilon = 1
         self.minEpsilon = 0.1
-        self.epsilonDecay = 0.9999539
+        self.epsilonDecay = 0.9999769
         self.discount = 0.95
         self.learningRate = 0.0000001
         self.batchSize = 32
