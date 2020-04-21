@@ -8,7 +8,11 @@ import skgeom as sg
 import numpy as np
 from constants import CONSTANTS as K
 from matplotlib.path import Path
+from collections import defaultdict
+from functools import partial
 CONST = K()
+
+import time
 
 from visibility import Visibility
 
@@ -19,24 +23,36 @@ class Obstacle:
     def getAllObs_vsbs(self, emptyMap):
         obsMaps = []
         vsbs = []
-        
+        vsbPolys = []
+        a = time.time()
         mp, vsb = self.getObstacleMap(emptyMap, self.obstacle1())
         obsMaps.append(mp)
         vsbs.append(vsb)
+        vsbPoly =  self.getVisibilityPolys(vsb, mp)
+        vsbPolys.append(vsbPoly)
         
-#        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle2())
-#        obsMaps.append(mp)
-#        vsbs.append(vsb)
-#        
-#        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle3())
-#        obsMaps.append(mp)
-#        vsbs.append(vsb)
-#        
-#        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle4())
-#        obsMaps.append(mp)
-#        vsbs.append(vsb)
+        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle2())
+        obsMaps.append(mp)
+        vsbs.append(vsb)
+        vsbPoly =  self.getVisibilityPolys(vsb, mp)
+        vsbPolys.append(vsbPoly)
         
-        return obsMaps, vsbs
+        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle3())
+        obsMaps.append(mp)
+        vsbs.append(vsb)
+        vsbPoly =  self.getVisibilityPolys(vsb, mp)
+        vsbPolys.append(vsbPoly)
+        
+        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle4())
+        obsMaps.append(mp)
+        vsbs.append(vsb)
+        vsbPoly =  self.getVisibilityPolys(vsb, mp)
+        vsbPolys.append(vsbPoly)
+
+        
+        b = time.time()
+        print("create vsb Polys:", round(1000*(b-a), 3))
+        return obsMaps, vsbs, vsbPolys
     
     def getObstacleMap(self, emptyMap, obstacleSet):
         obsList = obstacleSet
@@ -63,25 +79,13 @@ class Obstacle:
         img = np.where(img,150,emptyMap)
         return img, vsb
     
-    """
-    def getObstacleMap(self, emptyMap, vsb):
-        obsList = self.getObstacles()
-        for obs, isHole in obsList:
-            vsb.addGeom2Arrangement(obs)
-
-        # get obstacle polygon
-        points = CONST.GRID_CENTER_PTS
-        img = np.zeros_like(emptyMap, dtype = bool)
-        for obs, isHole in obsList:
-            p = Path(obs)
-            grid = p.contains_points(points)
-            mask = grid.reshape(50,50)
-            img = np.logical_or(img , (mask if not isHole else np.logical_not(mask)))
-           
-        img = img.T
-        img = np.where(img,150,emptyMap)
-        return img, vsb
-    """
+    def getVisibilityPolys(self,vsb, obsMap):
+        polys = defaultdict(partial(np.ndarray, 0))
+        for pt in CONST.GRID_CENTER_PTS:
+            if not obsMap[int(pt[0]),int(pt[1])] == 150:
+                polys[(pt[0],pt[1])] = vsb.getVsbPoly(pt)
+            
+        return polys
     
     def getObstacles(self):
         obstacle = self.obstacle1()

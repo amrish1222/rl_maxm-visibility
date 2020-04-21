@@ -24,8 +24,8 @@ class Env:
     def __init__(self):
         self.isNewSess = True
         self.timeStep = CONST.TIME_STEP
-        self.obsMaps, self.vsbs = self.initObsMaps_Vsbs()
-        self.obstacleMap , self.vsb, self.mapId = self.setRandMap_vsb()
+        self.obsMaps, self.vsbs, self.vsbPolys = self.initObsMaps_Vsbs()
+        self.obstacleMap , self.vsb, self.vsbPoly, self.mapId = self.setRandMap_vsb()
         self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
         self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -36,7 +36,7 @@ class Env:
     
     def setRandMap_vsb(self):
         i = random.randint(0, len(self.obsMaps)-1)
-        return self.obsMaps[i], self.vsbs[i], i
+        return self.obsMaps[i], self.vsbs[i], self.vsbPolys[i], i
     
     def initTotalArea_agents(self, numAgents):
         # unviewed = 0
@@ -63,7 +63,7 @@ class Env:
 #            adversaries.append(Adversary(25.5,10.5))
                    
         for agent in agents:
-            obstacleViewedMap = self.vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
+            obstacleViewedMap = self.vsb.updateVsbOnImg([agent.getState()[0]],obstacleViewedMap, self.vsbPoly)
         
         agentPos = [agent.getState()[0] for agent in agents]
         gPos = self.cartesian2Grid(agentPos)
@@ -79,7 +79,7 @@ class Env:
         obstacleMap = self.obstacleMap
         obstacleViewedMap = np.copy(obstacleMap)
         for agent in self.agents:
-            obstacleViewedMap = self.vsb.updateVsbPolyOnImg([agent.getState()[0]],obstacleViewedMap)
+            obstacleViewedMap = self.vsb.updateVsbOnImg([agent.getState()[0]],obstacleViewedMap, self.vsbPoly)
         
         agentPos = [agent.getState()[0] for agent in self.agents]
         gPos = self.cartesian2Grid(agentPos)
@@ -100,7 +100,7 @@ class Env:
     def reset(self):
         
         # need to update initial state for reset function
-        self.obstacleMap , self.vsb, self.mapId = self.setRandMap_vsb()
+        self.obstacleMap , self.vsb, self.vsbPoly, self.mapId = self.setRandMap_vsb()
         self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
 
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
@@ -166,7 +166,7 @@ class Env:
         agentPos, agentVel = self.stepAgent(agentActions)
         gPos = self.cartesian2Grid(agentPos)
         # get new visibility and update obsPlusViewed
-        self.obsPlusViewed = self.vsb.updateVsbPolyOnImg(agentPos,self.obsPlusViewed)
+        self.obsPlusViewed = self.vsb.updateVsbOnImg(agentPos,self.obsPlusViewed, self.vsbPoly)
         # update position on currentMapState
         temp = self.updatePosMap(gPos, self.obsPlusViewed, 100)
         
@@ -174,7 +174,7 @@ class Env:
         advPos = self.cartesian2Grid(advrsyPos)
         self.currentMapState = self.updatePosMap(advPos, temp, 200)
         
-        AdvVisibility = self.vsb.checkPtInVsbPoly(advrsyPos, agentPos)
+        AdvVisibility = self.vsb.checkPtInVsbPolyDict(advrsyPos, agentPos, self.vsbPoly)
         
         display = self.currentMapState
         # update reward mechanism

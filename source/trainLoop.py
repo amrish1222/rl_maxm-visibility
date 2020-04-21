@@ -17,26 +17,9 @@ import simpleCNNagent as cNN
 from constants import CONSTANTS
 CONST = CONSTANTS()
 
-np.set_printoptions(threshold = np.inf, linewidth = 1000 ,precision=3, suppress=True)
+from time import time as tm
 
-def waitKeyPress():
-    wait = True
-    while(wait):
-        k = cv2.waitKeyEx(1) 
-        #            print(k)
-        if k == 2490368:
-            act = 1
-            wait = False
-        elif k == 2424832:
-            act = 2
-            wait = False
-        elif k == 2621440:
-            act = 3
-            wait = False
-        elif k == 2555904:
-            act = 4
-            wait = False
-    return act
+np.set_printoptions(threshold = np.inf, linewidth = 1000 ,precision=3, suppress=True)
 
 def getKeyPressOld(act):
     k = cv2.waitKeyEx(1) 
@@ -52,10 +35,10 @@ def getKeyPressOld(act):
     return act
 
 def getKeyPress(act):
-#    if keyboard.is_pressed('['):
-#        act = 1
-#    elif keyboard.is_pressed(']'):
-#        act = 2
+    if keyboard.is_pressed('['):
+        act = 1
+    elif keyboard.is_pressed(']'):
+        act = 2
     return act
 
 
@@ -67,7 +50,7 @@ rlAgent = cNN.SimplecNNagent(env)
 
 
 NUM_EPISODES = 50000
-LEN_EPISODES = 25
+LEN_EPISODES = 125
 curState = []
 newState= []
 reward_history = []
@@ -80,10 +63,10 @@ curRawState = env.reset()
 curState = rlAgent.formatInput(curRawState)
 #rlAgent.summaryWriter_showNetwork(curState[0])
 
-keyPress = 0
+keyPress = 1
 
 for episode in tqdm(range(NUM_EPISODES)):
-    LEN_EPISODES = 25 + min(int(episode* 5 /50),100)
+#    LEN_EPISODES = 25 + min(int(episode* 5 /50),100)
     curRawState = env.reset()
     
     # generate state for each agent
@@ -98,7 +81,7 @@ for episode in tqdm(range(NUM_EPISODES)):
         # render environment after taking a step
         keyPress = getKeyPress(keyPress)
         
-        if keyPress == 1:
+        if keyPress == 1 and step%4 == 0:
             env.render()
         
         if episode%500 in range(10,15) and step%4 == 0:
@@ -111,8 +94,10 @@ for episode in tqdm(range(NUM_EPISODES)):
             aActions.append(rlAgent.EpsilonGreedyPolicy(curState[i]))
         
         # do actions
+#        a = tm()
         agentPosList, display, reward, newAreaVis, penalty, done = env.step(aActions)
-
+#        b = tm()
+#        print("step: ", round(1000*(b-a), 3))
         # update nextState
         newRawState = []
         for agentPos in agentPosList:
