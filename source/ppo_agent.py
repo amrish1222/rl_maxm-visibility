@@ -140,6 +140,7 @@ class PPO:
         
         # Copy new weights into old policy:
         self.policy_old.load_state_dict(self.policy.state_dict())
+        return loss.mean().item()
         
     def formatInput(self, states):
         out = []
@@ -156,7 +157,8 @@ class PPO:
         self.sw.add_graph(self.model, X, False)
     
     def summaryWriter_addMetrics(self, episode, loss, rewardHistory, mapRwdDict, lenEpisode):
-        self.sw.add_scalar('6.Loss', loss, episode)
+        if loss:
+            self.sw.add_scalar('6.Loss', loss, episode)
         self.sw.add_scalar('3.Reward', rewardHistory[-1], episode)
         self.sw.add_scalar('5.Episode Length', lenEpisode, episode)
         

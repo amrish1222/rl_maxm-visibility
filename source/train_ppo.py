@@ -48,12 +48,11 @@ rlAgent = PPO(env)
 
 NUM_EPISODES = 50000
 LEN_EPISODES = 125
-UPDATE_TIMESTEP = 4000
+UPDATE_TIMESTEP = 2000
 curState = []
 newState= []
 reward_history = []
 mapNewVisPenalty_history = defaultdict(list)
-loss_history = []
 totalViewed = []
 dispFlag = False
 
@@ -62,6 +61,8 @@ curState = rlAgent.formatInput(curRawState)
 #rlAgent.summaryWriter_showNetwork(curState[0])
 
 keyPress = 1
+timestep = 0
+loss = None
 
 for episode in tqdm(range(NUM_EPISODES)):
     curRawState = env.reset()
@@ -73,8 +74,6 @@ for episode in tqdm(range(NUM_EPISODES)):
     epidoseLoss = 0
     episodeNewVisited = 0
     episodePenalty = 0
-    
-    timestep = 0
     
     for step in range(LEN_EPISODES):
         timestep += 1
@@ -107,16 +106,15 @@ for episode in tqdm(range(NUM_EPISODES)):
             newRawState.append([agentPos, display])
         newState = rlAgent.formatInput(newRawState)
         
-        loss = 0
+        
         
         if timestep % UPDATE_TIMESTEP == 0:
-            loss += rlAgent.update(memory)
+            loss = rlAgent.update(memory)
             memory.clear_memory()
             timestep = 0
         
         # record history
         episodeReward += reward
-        epidoseLoss += loss
         episodeNewVisited += newAreaVis
         episodePenalty += penalty
         
@@ -130,13 +128,12 @@ for episode in tqdm(range(NUM_EPISODES)):
     
     # Record history        
     reward_history.append(episodeReward)
-    loss_history.append(epidoseLoss)
     mapNewVisPenalty_history[env.mapId].append((episodeReward,episodeNewVisited,episodePenalty))
 #    totalViewed.append(np.count_nonzero(display==255))
     
     # You may want to plot periodically instead of after every episode
     # Otherwise, things will slow
-    rlAgent.summaryWriter_addMetrics(episode, epidoseLoss, reward_history, mapNewVisPenalty_history, LEN_EPISODES)
+    rlAgent.summaryWriter_addMetrics(episode, loss, reward_history, mapNewVisPenalty_history, LEN_EPISODES)
     if episode % 50 == 0:
         rlAgent.saveModel("checkpoints")
             
