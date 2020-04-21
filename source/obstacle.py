@@ -24,17 +24,17 @@ class Obstacle:
         obsMaps.append(mp)
         vsbs.append(vsb)
         
-        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle2())
-        obsMaps.append(mp)
-        vsbs.append(vsb)
-        
-        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle3())
-        obsMaps.append(mp)
-        vsbs.append(vsb)
-        
-        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle4())
-        obsMaps.append(mp)
-        vsbs.append(vsb)
+#        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle2())
+#        obsMaps.append(mp)
+#        vsbs.append(vsb)
+#        
+#        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle3())
+#        obsMaps.append(mp)
+#        vsbs.append(vsb)
+#        
+#        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle4())
+#        obsMaps.append(mp)
+#        vsbs.append(vsb)
         
         return obsMaps, vsbs
     
