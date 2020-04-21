@@ -7,6 +7,8 @@ from statistics import mean
 from torch.utils.tensorboard import SummaryWriter
 import random
 
+torch.manual_seed(10)
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class Memory:
@@ -56,6 +58,8 @@ class ActorCritic(nn.Module):
                     nn.ReLU(),
                     nn.Linear(256, 1)
                 )
+
+        self.train()
         
     def forward(self):
         raise NotImplementedError
@@ -85,7 +89,7 @@ class ActorCritic(nn.Module):
         
 class PPO:
     def __init__(self, env):
-        self.lr = 0.0000001
+        self.lr = 0.0002
         self.betas = (0.9, 0.999)
         self.gamma = 0.99 
         self.eps_clip = 0.2
@@ -129,6 +133,7 @@ class PPO:
                 
             # Finding Surrogate Loss:
             advantages = rewards - state_values.detach()
+#            advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-5)
             surr1 = ratios * advantages
             surr2 = torch.clamp(ratios, 1-self.eps_clip, 1+self.eps_clip) * advantages
             loss = -torch.min(surr1, surr2) + 0.5*self.MseLoss(state_values, rewards) - 0.01*dist_entropy
@@ -140,7 +145,7 @@ class PPO:
         
         # Copy new weights into old policy:
         self.policy_old.load_state_dict(self.policy.state_dict())
-        return loss.mean().item()
+        return advantages.mean()
         
     def formatInput(self, states):
         out = []

@@ -96,7 +96,8 @@ for episode in tqdm(range(NUM_EPISODES)):
         
         # do actions
         agentPosList, display, reward, newAreaVis, penalty, done = env.step(aActions)
-
+        if step == LEN_EPISODES -1:
+            done = True
         memory.rewards.append(reward)
         memory.is_terminals.append(done)
         
