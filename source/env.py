@@ -176,7 +176,10 @@ class Env:
         advPos = self.cartesian2Grid(advrsyPos)
         self.currentMapState = self.updatePosMap(advPos, temp, 200)
         
-        AdvVisibility = self.vsb.checkPtInVsbPolyDict(advrsyPos, agentPos, self.vsbPoly)
+#        AdvVisibility = self.vsb.checkPtInVsbPolyDict(advrsyPos, agentPos, self.vsbPoly)
+        
+        separation = np.linalg.norm(advrsyPos[0]-agentPos[0])
+        AdvVisibility = separation <= CONST.SEPERATION_PENALTY
         
         display = self.currentMapState
         # update reward mechanism
