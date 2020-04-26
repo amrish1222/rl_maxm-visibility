@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# -*- coding: utf-8 -*-
-
 import warnings
 warnings.filterwarnings('ignore')
 import keyboard
@@ -47,7 +45,7 @@ rlAgent = PPO(env)
 
 
 NUM_EPISODES = 50000
-LEN_EPISODES = 125
+LEN_EPISODES = 200
 UPDATE_TIMESTEP = 2000
 curState = []
 newState= []
@@ -56,8 +54,8 @@ mapNewVisPenalty_history = defaultdict(list)
 totalViewed = []
 dispFlag = False
 
-curRawState = env.reset()
-curState = rlAgent.formatInput(curRawState)
+#curRawState = env.reset()
+#curState = rlAgent.formatInput(curRawState)
 #rlAgent.summaryWriter_showNetwork(curState[0])
 
 keyPress = 1
@@ -95,7 +93,7 @@ for episode in tqdm(range(NUM_EPISODES)):
             aActions.append(action)
         
         # do actions
-        agentPosList, display, reward, newAreaVis, penalty, done = env.step(aActions)
+        agentPosList, advrsyPosList, display, reward, newAreaVis, penalty, done = env.step(aActions)
         if step == LEN_EPISODES -1:
             done = True
         memory.rewards.append(reward)
@@ -104,7 +102,7 @@ for episode in tqdm(range(NUM_EPISODES)):
         # update nextState
         newRawState = []
         for agentPos in agentPosList:
-            newRawState.append([agentPos, display])
+            newRawState.append([agentPos, advrsyPosList, display])
         newState = rlAgent.formatInput(newRawState)
         
         
@@ -129,8 +127,8 @@ for episode in tqdm(range(NUM_EPISODES)):
     
     # Record history        
     reward_history.append(episodeReward)
-    mapNewVisPenalty_history[env.mapId].append((episodeReward,episodeNewVisited,episodePenalty))
-#    totalViewed.append(np.count_nonzero(display==255))
+    totalViewed.append(np.count_nonzero(display==255))
+    mapNewVisPenalty_history[env.mapId].append((episodeReward,episodeNewVisited,episodePenalty,totalViewed[-1]))
     
     # You may want to plot periodically instead of after every episode
     # Otherwise, things will slow

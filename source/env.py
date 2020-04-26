@@ -54,8 +54,8 @@ class Env:
         ndxs = random.sample(range(x.shape[0]), CONST.NUM_AGENTS + CONST.NUM_ADVRSRY)
 
         for ndx in ndxs[:-(CONST.NUM_ADVRSRY)]:
-#            agents.append(Agent(x[ndx]+0.5, y[ndx]+0.5))
-            agents.append(Agent())
+            agents.append(Agent(x[ndx]+0.5, y[ndx]+0.5))
+#            agents.append(Agent())
 
         adversaries = []
         for ndx in ndxs[-(CONST.NUM_ADVRSRY):]:
@@ -105,9 +105,11 @@ class Env:
 
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
         
+        advrsyPos = [adversary.getState()[0] for adversary in self.adversaries]
+        
         state = []
         for agent in self.agents:
-            state.append([agent.getState()[0],self.currentMapState])
+            state.append([agent.getState()[0], advrsyPos, self.currentMapState])
         
         return state
         
@@ -181,8 +183,7 @@ class Env:
         newAreaVis, penalty = self.getReward(AdvVisibility)
         reward = newAreaVis + penalty
         done = np.count_nonzero(self.currentMapState==0) == 0
-        display = temp
-        return agentPos, display, reward, newAreaVis, penalty, done
+        return agentPos, advrsyPos, display, reward, newAreaVis, penalty, done
                 
 
     def render(self):
@@ -250,7 +251,6 @@ class Env:
         else:
 #            print("Not Visible")
             pass
-        penalty = 0
         return newAreaVis, penalty
         
     def cartesian2Grid(self, posList):
