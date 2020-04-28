@@ -109,7 +109,7 @@ class Env:
         
         state = []
         for agent in self.agents:
-            state.append([agent.getState()[0], advrsyPos, self.currentMapState])
+            state.append([agent.getState()[0], advrsyPos, self.displayConvert(self.currentMapState)])
         
         return state
         
@@ -181,14 +181,29 @@ class Env:
         separation = np.linalg.norm(advrsyPos[0]-agentPos[0])
         AdvVisibility = separation <= CONST.SEPERATION_PENALTY
         
-        display = self.currentMapState
+        
+        # return a list of arrays that contain (obs and vis) and (agentPos and advPos) separately
+        display = self.displayConvert(self.currentMapState)
         # update reward mechanism
         newAreaVis, penalty = self.getReward(AdvVisibility)
         reward = newAreaVis + penalty
         done = np.count_nonzero(self.currentMapState==0) == 0
         return agentPos, advrsyPos, display, reward, newAreaVis, penalty, done
-                
-
+    
+    def displayConvert(self, singleDisplay):
+        # 
+        disp1 = np.zeros_like(singleDisplay)
+        disp1 = np.where(singleDisplay == 255, -1, 0)
+        disp1 = np.where(singleDisplay == 150, 1, disp1)
+        
+        disp2 = np.zeros_like(singleDisplay)
+        disp2 = np.where(singleDisplay == 200, -1, 0)
+        disp2 = np.where(singleDisplay == 100, 1, disp2)
+        
+        disp = np.dstack((disp1, disp2))
+        disp = disp.transpose(2,0,1)
+        return disp
+        
     def render(self):
         img = np.copy(self.currentMapState)
         img = np.rot90(img,1)

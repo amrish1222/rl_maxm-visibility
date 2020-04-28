@@ -33,7 +33,7 @@ class ActorCritic(nn.Module):
 
         # actor
         self.feature1 = nn.Sequential(
-                    nn.Conv2d(1,16,(8,8),4,1),
+                    nn.Conv2d(2,16,(8,8),4,1),
                     nn.ReLU(),
                     nn.Conv2d(16,32,(4,4),2,1),
                     nn.ReLU(),
@@ -66,7 +66,7 @@ class ActorCritic(nn.Module):
         
         # critic
         self.feature2 = nn.Sequential(
-                    nn.Conv2d(1,16,(8,8),4,1),
+                    nn.Conv2d(2,16,(8,8),4,1),
                     nn.ReLU(),
                     nn.Conv2d(16,32,(4,4),2,1),
                     nn.ReLU(),
@@ -207,7 +207,7 @@ class PPO:
 #        for state in states:
 #            out.append(np.concatenate((state[0], state[1].flatten())))
         for state in states:
-            display = state[2].reshape((1, state[2].shape[0], state[2].shape[1]))
+            display = state[2]
             # single adversary position
             relativePos = state[1][0] - state[0][0]
             out.append([display, relativePos])
