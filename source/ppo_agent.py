@@ -6,6 +6,8 @@ from torch.distributions import Categorical
 from statistics import mean
 from torch.utils.tensorboard import SummaryWriter
 import random
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -153,6 +155,8 @@ class PPO:
         self.policy_old = ActorCritic(env).to(device)
         self.policy_old.load_state_dict(self.policy.state_dict())
         
+        self.device = device
+        
         self.MseLoss = nn.MSELoss()
         self.sw = SummaryWriter(log_dir=f"tf_log/demo_CNN{random.randint(0, 1000)}")
         print(f"Log Dir: {self.sw.log_dir}")
@@ -249,3 +253,47 @@ class PPO:
     def loadModel(self, filePath):
         self.model = torch.load(filePath)
         self.model.eval()
+    
+    def plot_kernels(self,tensor, fig, num_cols=6):
+        if not tensor.ndim==4:
+            raise Exception("assumes a 4D tensor")
+        num_kernels = tensor.shape[0]
+        num_rows = 1+ num_kernels // num_cols
+        fig = plt.figure(fig, figsize=(num_cols,num_rows))
+        for i in range(tensor.shape[0]):
+            ax1 = fig.add_subplot(num_rows,num_cols,i+1)
+            ax1.imshow(tensor[i][0])
+            ax1.axis('off')
+            ax1.set_xticklabels([])
+            ax1.set_yticklabels([])
+    
+        plt.subplots_adjust(wspace=0.1, hspace=0.1)
+        plt.show(block = False)
+        plt.pause(0.005)
+        plt.show()
+        
+    def getKernels(self):
+#        kernels = self.policy.feature1[0].weight.cpu().detach().numpy()
+#        self.plot_kernels(kernels, 2, 16)
+        
+        count = 0
+        num_kernels = 16+32+32
+        
+        fig = plt.figure(2, figsize=(16,10))
+        for feat in [self.policy.feature1[0], self.policy.feature1[2], self.policy.feature1[4]]:
+            wt = feat.weight.cpu().detach().numpy()
+            for i in range(feat.weight.shape[0]):
+                ax1 = fig.add_subplot(5,16,count+1)
+                count += 1
+                w = wt[i][0]
+                low =w.min()
+                high = w.max()
+                w = (w-low)/high
+                ax1.imshow(wt[i][0], cmap = 'gray')
+                ax1.axis('off')
+                ax1.set_xticklabels([])
+                ax1.set_yticklabels([])
+        plt.subplots_adjust(wspace=0.1, hspace=0.1)
+        plt.show(block = False)
+        plt.show()
+        plt.pause(0.005)

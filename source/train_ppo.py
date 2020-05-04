@@ -4,6 +4,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import keyboard
 
+import matplotlib.pyplot as plt
 import numpy as np
 from env import Env
 from tqdm import tqdm
@@ -31,10 +32,10 @@ def getKeyPressOld(act):
     return act
 
 def getKeyPress(act):
-#    if keyboard.is_pressed('['):
-#        act = 1
-#    elif keyboard.is_pressed(']'):
-#        act = 2
+    if keyboard.is_pressed('['):
+        act = 1
+    elif keyboard.is_pressed(']'):
+        act = 2
     return act
 
 
@@ -58,7 +59,7 @@ dispFlag = False
 #curState = rlAgent.formatInput(curRawState)
 #rlAgent.summaryWriter_showNetwork(curState[0])
 
-keyPress = 0
+keyPress = 1
 timestep = 0
 loss = None
 
@@ -111,6 +112,7 @@ for episode in tqdm(range(NUM_EPISODES)):
             loss = rlAgent.update(memory)
             memory.clear_memory()
             timestep = 0
+            
         
         # record history
         episodeReward += reward
