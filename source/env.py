@@ -184,7 +184,7 @@ class Env:
         display = self.currentMapState
         # update reward mechanism
         newAreaVis, penalty = self.getReward(AdvVisibility)
-        reward = newAreaVis + penalty
+        reward = penalty
         done = np.count_nonzero(self.currentMapState==0) == 0
         return agentPos, advrsyPos, display, reward, newAreaVis, penalty, done
                 
