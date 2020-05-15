@@ -35,12 +35,15 @@ class ActorCritic(nn.Module):
 
         # actor
         self.feature1 = nn.Sequential(
-                    nn.Conv2d(1,16,(8,8),4,1),
+                    nn.Conv2d(1,16,(3,3),1,1),
                     nn.ReLU(),
-                    nn.Conv2d(16,32,(4,4),2,1),
+                    nn.MaxPool2d(2),
+                    nn.Conv2d(16,32,(3,3),1,1),
                     nn.ReLU(),
+                    nn.MaxPool2d(2),
                     nn.Conv2d(32,32,(3,3),1,1),
                     nn.ReLU(),
+                    nn.MaxPool2d(2),
                     nn.Flatten()
                     )
         self.reg1 = nn.Sequential(
@@ -68,12 +71,15 @@ class ActorCritic(nn.Module):
         
         # critic
         self.feature2 = nn.Sequential(
-                    nn.Conv2d(1,16,(8,8),4,1),
+                    nn.Conv2d(1,16,(3,3),1,1),
                     nn.ReLU(),
-                    nn.Conv2d(16,32,(4,4),2,1),
+                    nn.MaxPool2d(2),
+                    nn.Conv2d(16,32,(3,3),1,1),
                     nn.ReLU(),
+                    nn.MaxPool2d(2),
                     nn.Conv2d(32,32,(3,3),1,1),
                     nn.ReLU(),
+                    nn.MaxPool2d(2),
                     nn.Flatten()
                     )
         self.reg2 = nn.Sequential(
