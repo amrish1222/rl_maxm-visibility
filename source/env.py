@@ -26,7 +26,7 @@ class Env:
         self.timeStep = CONST.TIME_STEP
         self.obsMaps, self.vsbs, self.vsbPolys = self.initObsMaps_Vsbs()
         self.obstacleMap , self.vsb, self.vsbPoly, self.mapId = self.setRandMap_vsb()
-        self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
+        self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.advObsPlusViewed, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
         self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         self.out = cv2.VideoWriter(f"checkpoints/cnn1.avi",self.fourcc, 50, (700,700))
@@ -67,13 +67,14 @@ class Env:
         
         agentPos = [agent.getState()[0] for agent in agents]
         gPos = self.cartesian2Grid(agentPos)
-        temp = self.updatePosMap(gPos, obstacleViewedMap, 100)
+        currentMapState = self.updatePosMap(gPos, obstacleViewedMap, 100)
         
         advrsyPos = [adversary.getState()[0] for adversary in adversaries]
         advPos = self.cartesian2Grid(advrsyPos)
-        currentMapState = self.updatePosMap(advPos, temp, 200)
+        advObsPlusViewed = self.updatePosMap(advPos, obstacleViewedMap, 200)
         
-        return obstacleMap, obstacleViewedMap, currentMapState, agents, adversaries
+        
+        return obstacleMap, obstacleViewedMap, currentMapState, advObsPlusViewed, agents, adversaries
     
     def resetTotalArea(self):
         obstacleMap = self.obstacleMap
@@ -101,15 +102,19 @@ class Env:
         
         # need to update initial state for reset function
         self.obstacleMap , self.vsb, self.vsbPoly, self.mapId = self.setRandMap_vsb()
-        self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
+        self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.advObsPlusViewed, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
 
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
         
         advrsyPos = [adversary.getState()[0] for adversary in self.adversaries]
         
+        advPos = self.cartesian2Grid(advrsyPos)
+        advObsPlusViewed = self.vsb.updateVsbOnImg(advrsyPos,self.obstacleMap, self.vsbPoly)
+        advObsPlusViewed = self.updatePosMap(advPos, advObsPlusViewed, 200)
+        
         state = []
         for agent in self.agents:
-            state.append([agent.getState()[0], advrsyPos, self.displayConvert(self.currentMapState)])
+            state.append([agent.getState()[0], advrsyPos, self.displayConvert(self.currentMapState, advObsPlusViewed)])
         
         return state
         
@@ -170,37 +175,42 @@ class Env:
         # get new visibility and update obsPlusViewed
         self.obsPlusViewed = self.vsb.updateVsbOnImg(agentPos,self.obsPlusViewed, self.vsbPoly)
         # update position on currentMapState
-        temp = self.updatePosMap(gPos, self.obsPlusViewed, 100)
+        self.currentMapState = self.updatePosMap(gPos, self.obsPlusViewed, 100)
         
         advrsyPos = [adversary.getState()[0] for adversary in self.adversaries]
         advPos = self.cartesian2Grid(advrsyPos)
-        self.currentMapState = self.updatePosMap(advPos, temp, 200)
+        self.advObsPlusViewed = self.vsb.updateVsbOnImg(advrsyPos,self.obstacleMap, self.vsbPoly)
+        self.advObsPlusViewed = self.updatePosMap(advPos, self.advObsPlusViewed, 200)
         
-#        AdvVisibility = self.vsb.checkPtInVsbPolyDict(advrsyPos, agentPos, self.vsbPoly)
+        AdvVisibility = self.vsb.checkPtInVsbPolyDict(advrsyPos, agentPos, self.vsbPoly)
         
-        separation = np.linalg.norm(advrsyPos[0]-agentPos[0])
-        AdvVisibility = separation <= CONST.SEPERATION_PENALTY
+#        separation = np.linalg.norm(advrsyPos[0]-agentPos[0])
+#        AdvVisibility = separation <= CONST.SEPERATION_PENALTY
         
         
         # return a list of arrays that contain (obs and vis) and (agentPos and advPos) separately
-        display = self.displayConvert(self.currentMapState)
+        display = self.displayConvert(self.currentMapState, self.advObsPlusViewed)
         # update reward mechanism
         newAreaVis, penalty = self.getReward(AdvVisibility)
         reward = newAreaVis + penalty
         done = np.count_nonzero(self.currentMapState==0) == 0
         return agentPos, advrsyPos, display, reward, newAreaVis, penalty, done
     
-    def displayConvert(self, singleDisplay):
-        # 
-        disp1 = np.zeros_like(singleDisplay)
-        disp1 = np.where(singleDisplay == 255, -1, 0)
-        disp1 = np.where(singleDisplay == 150, 1, disp1)
+    def displayConvert(self, agentDisplay, advDisplay):
+        # (agentVis, agentPos), (Obs), (advVis, advPos)
         
-        disp2 = np.zeros_like(singleDisplay)
-        disp2 = np.where(singleDisplay == 200, -1, 0)
-        disp2 = np.where(singleDisplay == 100, 1, disp2)
+        agentInfo = np.zeros_like(agentDisplay)
+        agentInfo = np.where(agentDisplay == 255, -1, 0)       # agentVis
+        agentInfo = np.where(agentDisplay == 100, 1, agentInfo) # agentPos
         
-        disp = np.dstack((disp1, disp2))
+        advInfo = np.zeros_like(advDisplay)
+        advInfo = np.where(advDisplay == 255, -1, 0)
+        advInfo = np.where(advDisplay == 200, 1, advInfo)
+        
+        obsInfo = np.zeros_like(agentDisplay)
+        obsInfo = np.where(agentDisplay == 150, 1, 0)
+        
+        disp = np.dstack((agentInfo, advInfo, obsInfo))
         disp = disp.transpose(2,0,1)
         return disp
         
@@ -216,7 +226,8 @@ class Env:
         bgr[:,:,0] = b_n
         
         # adversary Pos
-        advPos = np.where(img == 200)
+        advPos = np.where( np.rot90(self.advObsPlusViewed,1) == 200)
+        bgr[advPos[0], advPos[1],0] = 0
         bgr[advPos[0], advPos[1],1] = 255
         bgr[advPos[0], advPos[1],2] = 255
         
@@ -237,7 +248,9 @@ class Env:
         bgr[:,:,0] = b_n
         
         # adversary Pos
-        advPos = np.where(img == 200)
+        
+        advPos = np.where( np.rot90(self.advObsPlusViewed,1) == 200)
+        bgr[advPos[0], advPos[1],0] = 0
         bgr[advPos[0], advPos[1],1] = 255
         bgr[advPos[0], advPos[1],2] = 255
         
@@ -257,10 +270,12 @@ class Env:
     def getReward(self, AdvVisibility):
         curUnviewedCount = np.count_nonzero(self.currentMapState==0)
         newAreaVis = self.prevUnviewedCount - curUnviewedCount
-        self.prevUnviewedCount = curUnviewedCount
-        
+
         if newAreaVis < 0:
             print("Error calculating newArea")
+
+        self.prevUnviewedCount = curUnviewedCount
+        
         
         penalty = 0
         if AdvVisibility:

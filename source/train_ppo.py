@@ -46,7 +46,7 @@ rlAgent = PPO(env)
 
 NUM_EPISODES = 50000
 LEN_EPISODES = 200
-UPDATE_TIMESTEP = 2000
+UPDATE_TIMESTEP = 1000
 curState = []
 newState= []
 reward_history = []
