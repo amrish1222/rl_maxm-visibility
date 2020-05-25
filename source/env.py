@@ -192,25 +192,32 @@ class Env:
         display = self.displayConvert(self.currentMapState, self.advObsPlusViewed)
         # update reward mechanism
         newAreaVis, penalty = self.getReward(AdvVisibility)
-        reward = newAreaVis + penalty
+        reward = newAreaVis # + penalty
         done = np.count_nonzero(self.currentMapState==0) == 0
         return agentPos, advrsyPos, display, reward, newAreaVis, penalty, done
     
     def displayConvert(self, agentDisplay, advDisplay):
         # (agentVis, agentPos), (Obs), (advVis, advPos)
+        # AgentVis, agentPos, Obs, advVis, advPos
         
-        agentInfo = np.zeros_like(agentDisplay)
-        agentInfo = np.where(agentDisplay == 255, -1, 0)       # agentVis
-        agentInfo = np.where(agentDisplay == 100, 1, agentInfo) # agentPos
+        agentVis= np.zeros_like(agentDisplay)
+        agentVis = np.where(agentDisplay == 255, 1, 0)       # agentVis
+        agentVis = np.where(agentDisplay == 100, 1, agentVis)
         
-        advInfo = np.zeros_like(advDisplay)
-        advInfo = np.where(advDisplay == 255, -1, 0)
-        advInfo = np.where(advDisplay == 200, 1, advInfo)
+        agentPos = np.zeros_like(agentDisplay)
+        agentPos = np.where(agentDisplay == 100, 1, 0) # agentPos
+        
+        advVis = np.zeros_like(advDisplay)
+        advVis = np.where(advDisplay == 255, 1, 0)
+        advVis = np.where(advDisplay == 200, 1, advVis)
+        
+        advPos = np.zeros_like(advDisplay)
+        advPos = np.where(advDisplay == 200, 1, advPos)
         
         obsInfo = np.zeros_like(agentDisplay)
         obsInfo = np.where(agentDisplay == 150, 1, 0)
         
-        disp = np.dstack((agentInfo, advInfo, obsInfo))
+        disp = np.dstack((agentVis, agentPos, obsInfo, advVis, advPos))
         disp = disp.transpose(2,0,1)
         return disp
         
@@ -234,6 +241,29 @@ class Env:
         displayImg = cv2.resize(bgr,(700,700),interpolation = cv2.INTER_AREA)
         
         cv2.imshow("Position Map", displayImg)
+        
+        
+        img = np.copy(self.advObsPlusViewed)
+        img = np.rot90(img,1)
+        r = np.where(img==150, 255, 0)
+        g = np.zeros_like(img)
+        
+        b = np.zeros_like(img)
+        b_n = np.where(img==255, 100, 0)
+        bgr = np.stack((b,g,r),axis = 2)
+        bgr[:,:,0] = b_n
+        
+        # adversary Pos
+        advPos = np.where( img == 200)
+        bgr[advPos[0], advPos[1],0] = 0
+        bgr[advPos[0], advPos[1],1] = 255
+        bgr[advPos[0], advPos[1],2] = 255
+        
+        displayImg = cv2.resize(bgr,(700,700),interpolation = cv2.INTER_AREA)
+        
+        cv2.imshow("Adv Map", displayImg)
+        
+        
         cv2.waitKey(1)
     
     def save2Vid(self):

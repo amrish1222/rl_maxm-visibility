@@ -33,7 +33,7 @@ class ActorCritic(nn.Module):
 
         # actor
         self.feature1 = nn.Sequential(
-                    nn.Conv2d(3,16,(3,3),1,1),
+                    nn.Conv2d(5,16,(3,3),1,1),
                     nn.BatchNorm2d(16),
                     nn.ReLU(),
                     nn.MaxPool2d(2),
@@ -72,7 +72,7 @@ class ActorCritic(nn.Module):
         
         # critic
         self.feature2 = nn.Sequential(
-                    nn.Conv2d(3,16,(3,3),1,1),
+                    nn.Conv2d(5,16,(3,3),1,1),
                     nn.BatchNorm2d(16),
                     nn.ReLU(),
                     nn.MaxPool2d(2),
