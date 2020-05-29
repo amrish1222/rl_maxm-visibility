@@ -24,8 +24,8 @@ class Env:
     def __init__(self):
         self.isNewSess = True
         self.timeStep = CONST.TIME_STEP
-        self.obsMaps, self.vsbs, self.vsbPolys = self.initObsMaps_Vsbs()
-        self.obstacleMap , self.vsb, self.vsbPoly, self.mapId = self.setRandMap_vsb()
+        self.obsMaps, self.vsbs, self.vsbPolys, self.numOpenCellsArr = self.initObsMaps_Vsbs()
+        self.obstacleMap , self.vsb, self.vsbPoly, self.mapId, self.numOpenCells = self.setRandMap_vsb()
         self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.advObsPlusViewed, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
         self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -36,7 +36,7 @@ class Env:
     
     def setRandMap_vsb(self):
         i = random.randint(0, len(self.obsMaps)-1)
-        return self.obsMaps[i], self.vsbs[i], self.vsbPolys[i], i
+        return self.obsMaps[i], self.vsbs[i], self.vsbPolys[i], self.numOpenCellsArr[i], i
     
     def initTotalArea_agents(self, numAgents):
         # unviewed = 0
@@ -101,7 +101,7 @@ class Env:
     def reset(self):
         
         # need to update initial state for reset function
-        self.obstacleMap , self.vsb, self.vsbPoly, self.mapId = self.setRandMap_vsb()
+        self.obstacleMap , self.vsb, self.vsbPoly, self.numOpenCells, self.mapId = self.setRandMap_vsb()
         self.obstacleMap,self.obsPlusViewed, self.currentMapState, self.advObsPlusViewed, self.agents, self.adversaries = self.initTotalArea_agents(CONST.NUM_AGENTS)
 
         self.prevUnviewedCount = np.count_nonzero(self.currentMapState==0)
@@ -192,7 +192,7 @@ class Env:
         display = self.displayConvert(self.currentMapState, self.advObsPlusViewed)
         # update reward mechanism
         newAreaVis, penalty = self.getReward(AdvVisibility)
-        reward = newAreaVis # + penalty
+        reward = newAreaVis + penalty
         done = np.count_nonzero(self.currentMapState==0) == 0
         return agentPos, advrsyPos, display, reward, newAreaVis, penalty, done
     
@@ -309,7 +309,7 @@ class Env:
         
         penalty = 0
         if AdvVisibility:
-            penalty += -100
+            penalty += -CONST.VISIBILITY_PENALTY
 #            print("Visible")
         else:
 #            print("Not Visible")

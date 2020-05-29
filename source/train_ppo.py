@@ -45,7 +45,7 @@ rlAgent = PPO(env)
 
 
 NUM_EPISODES = 50000
-LEN_EPISODES = 200
+LEN_EPISODES = 1000
 UPDATE_TIMESTEP = 1000
 curState = []
 newState= []
@@ -128,7 +128,15 @@ for episode in tqdm(range(NUM_EPISODES)):
     # Record history        
     reward_history.append(episodeReward)
     totalViewed.append(np.count_nonzero(env.currentMapState==255))
-    mapNewVisPenalty_history[env.mapId].append((episodeReward,episodeNewVisited,episodePenalty,totalViewed[-1]))
+    
+    # scaling both positive reward and negative reward to [0,1] and adding
+    scaledTotalReward = episodeNewVisited / env.numOpenCells + episodePenalty/ (CONST.VISIBILITY_PENALTY* LEN_EPISODES)
+    
+    mapNewVisPenalty_history[env.mapId].append((scaledTotalReward,
+                                                episodeNewVisited / env.numOpenCells,
+                                                episodePenalty/ (CONST.VISIBILITY_PENALTY* LEN_EPISODES),
+                                                totalViewed[-1]/ env.numOpenCells
+                                                ))
     
     # You may want to plot periodically instead of after every episode
     # Otherwise, things will slow

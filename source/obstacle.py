@@ -24,35 +24,40 @@ class Obstacle:
         obsMaps = []
         vsbs = []
         vsbPolys = []
+        numOpenCellsArr = []
         a = time.time()
         mp, vsb = self.getObstacleMap(emptyMap, self.obstacle1())
         obsMaps.append(mp)
         vsbs.append(vsb)
         vsbPoly =  self.getVisibilityPolys(vsb, mp)
         vsbPolys.append(vsbPoly)
+        numOpenCellsArr.append(np.count_nonzero(mp==0))
         
         mp, vsb = self.getObstacleMap(emptyMap, self.obstacle2())
         obsMaps.append(mp)
         vsbs.append(vsb)
         vsbPoly =  self.getVisibilityPolys(vsb, mp)
         vsbPolys.append(vsbPoly)
+        numOpenCellsArr.append(np.count_nonzero(mp==0))
         
         mp, vsb = self.getObstacleMap(emptyMap, self.obstacle3())
         obsMaps.append(mp)
         vsbs.append(vsb)
         vsbPoly =  self.getVisibilityPolys(vsb, mp)
         vsbPolys.append(vsbPoly)
+        numOpenCellsArr.append(np.count_nonzero(mp==0))
         
         mp, vsb = self.getObstacleMap(emptyMap, self.obstacle4())
         obsMaps.append(mp)
         vsbs.append(vsb)
         vsbPoly =  self.getVisibilityPolys(vsb, mp)
         vsbPolys.append(vsbPoly)
+        numOpenCellsArr.append(np.count_nonzero(mp==0))
 
         
         b = time.time()
         print("create vsb Polys:", round(1000*(b-a), 3))
-        return obsMaps, vsbs, vsbPolys
+        return obsMaps, vsbs, vsbPolys, numOpenCellsArr
     
     def getObstacleMap(self, emptyMap, obstacleSet):
         obsList = obstacleSet
