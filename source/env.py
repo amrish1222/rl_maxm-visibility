@@ -114,7 +114,7 @@ class Env:
         
         state = []
         for agent in self.agents:
-            state.append([agent.getState()[0], advrsyPos, self.displayConvert(self.currentMapState, advObsPlusViewed)])
+            state.append([agent.getState()[0], advrsyPos, self.displayConvert3(self.currentMapState, advObsPlusViewed)])
         
         return state
         
@@ -189,14 +189,14 @@ class Env:
         
         
         # return a list of arrays that contain (obs and vis) and (agentPos and advPos) separately
-        display = self.displayConvert(self.currentMapState, self.advObsPlusViewed)
+        display = self.displayConvert3(self.currentMapState, self.advObsPlusViewed)
         # update reward mechanism
         newAreaVis, penalty = self.getReward(AdvVisibility)
         reward = newAreaVis + penalty
         done = np.count_nonzero(self.currentMapState==0) == 0
         return agentPos, advrsyPos, display, reward, newAreaVis, penalty, done
     
-    def displayConvert(self, agentDisplay, advDisplay):
+    def displayConvert5(self, agentDisplay, advDisplay):
         # (agentVis, agentPos), (Obs), (advVis, advPos)
         # AgentVis, agentPos, Obs, advVis, advPos
         
@@ -218,6 +218,26 @@ class Env:
         obsInfo = np.where(agentDisplay == 150, 1, 0)
         
         disp = np.dstack((agentVis, agentPos, obsInfo, advVis, advPos))
+        disp = disp.transpose(2,0,1)
+        return disp
+    
+    def displayConvert3(self, agentDisplay, advDisplay):
+        # (agentVis, agentPos), (Obs), (advVis, advPos)
+        # AgentVis, agentPos, Obs, advVis, advPos
+        
+        agentInfo= np.zeros_like(agentDisplay)
+        agentInfo = np.where(agentDisplay == 255, 1, 0)       # agentVis
+        agentInfo = np.where(agentDisplay == 100, -1, agentInfo)
+
+        advInfo = np.zeros_like(advDisplay)
+        advInfo = np.where(advDisplay == 255, 1, 0)
+        advInfo = np.where(advDisplay == 200, -1, advInfo)
+
+        
+        obsInfo = np.zeros_like(agentDisplay)
+        obsInfo = np.where(agentDisplay == 150, 1, 0)
+        
+        disp = np.dstack((agentInfo, obsInfo, advInfo))
         disp = disp.transpose(2,0,1)
         return disp
         
