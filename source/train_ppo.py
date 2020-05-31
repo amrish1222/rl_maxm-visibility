@@ -47,7 +47,7 @@ rlAgent = PPO(env)
 
 NUM_EPISODES = 50000
 LEN_EPISODES = 500
-UPDATE_TIMESTEP = 2000
+UPDATE_TIMESTEP = 1000
 curState = []
 newState= []
 reward_history = []
@@ -96,8 +96,8 @@ for episode in tqdm(range(NUM_EPISODES)):
             
         
         # append History
-        stateHist = np.array(stateHistQ)
-        stateHist.reshape(3,50,50)
+        stateHist = np.array(stateHistQ)[0:2]
+        stateHist.reshape(2,50,50)
         curState[0][0] = np.concatenate((curState[0][0], stateHist), axis = 0)
         # Get agent actions
         aActions = []
