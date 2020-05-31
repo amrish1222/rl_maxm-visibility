@@ -33,7 +33,7 @@ class ActorCritic(nn.Module):
 
         # actor
         self.feature1 = nn.Sequential(
-                    nn.Conv2d(3,16,(3,3),1,1),
+                    nn.Conv2d(6,16,(3,3),1,1),
                     nn.BatchNorm2d(16),
                     nn.ReLU(),
                     nn.MaxPool2d(2),
@@ -72,7 +72,7 @@ class ActorCritic(nn.Module):
         
         # critic
         self.feature2 = nn.Sequential(
-                    nn.Conv2d(3,16,(3,3),1,1),
+                    nn.Conv2d(6,16,(3,3),1,1),
                     nn.BatchNorm2d(16),
                     nn.ReLU(),
                     nn.MaxPool2d(2),
@@ -154,7 +154,7 @@ class PPO:
     def __init__(self, env):
         self.lr = 0.000002
         self.betas = (0.9, 0.999)
-        self.gamma = 0.99 
+        self.gamma = 0.8 
         self.eps_clip = 0.2
         self.K_epochs = 4
         

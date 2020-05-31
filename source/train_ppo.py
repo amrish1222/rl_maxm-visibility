@@ -9,6 +9,7 @@ from env import Env
 from tqdm import tqdm
 import cv2
 from collections import defaultdict
+from collections import deque
 
 from ppo_agent import PPO
 from ppo_agent import Memory
@@ -45,8 +46,8 @@ rlAgent = PPO(env)
 
 
 NUM_EPISODES = 50000
-LEN_EPISODES = 1000
-UPDATE_TIMESTEP = 1000
+LEN_EPISODES = 500
+UPDATE_TIMESTEP = 2000
 curState = []
 newState= []
 reward_history = []
@@ -62,6 +63,10 @@ keyPress = 0
 timestep = 0
 loss = None
 
+#initialization of history
+stateHistQ = deque([])
+
+
 for episode in tqdm(range(NUM_EPISODES)):
     curRawState = env.reset()
     
@@ -72,6 +77,10 @@ for episode in tqdm(range(NUM_EPISODES)):
     epidoseLoss = 0
     episodeNewVisited = 0
     episodePenalty = 0
+    
+    stateHistQ.clear()
+    for i in range(3):
+        stateHistQ.append(np.zeros_like(curState[0][0][0]))
     
     for step in range(LEN_EPISODES):
         timestep += 1
@@ -85,6 +94,11 @@ for episode in tqdm(range(NUM_EPISODES)):
         if episode%500 in range(10,15) and step%4 == 0:
             env.save2Vid()
             
+        
+        # append History
+        stateHist = np.array(stateHistQ)
+        stateHist.reshape(3,50,50)
+        curState[0][0] = np.concatenate((curState[0][0], stateHist), axis = 0)
         # Get agent actions
         aActions = []
         for i in range(CONST.NUM_AGENTS):
@@ -105,7 +119,8 @@ for episode in tqdm(range(NUM_EPISODES)):
             newRawState.append([agentPos, advrsyPosList, display])
         newState = rlAgent.formatInput(newRawState)
         
-        
+        stateHistQ.popleft()
+        stateHistQ.append(newState[0][0][0])
         
         if timestep % UPDATE_TIMESTEP == 0:
             loss = rlAgent.update(memory)
