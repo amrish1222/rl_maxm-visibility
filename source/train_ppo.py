@@ -45,7 +45,7 @@ rlAgent = PPO(env)
 
 
 NUM_EPISODES = 50000
-LEN_EPISODES = 1000
+LEN_EPISODES = 500
 UPDATE_TIMESTEP = 1000
 curState = []
 newState= []
@@ -94,6 +94,11 @@ for episode in tqdm(range(NUM_EPISODES)):
         
         # do actions
         agentPosList, advrsyPosList, display, reward, newAreaVis, penalty, done = env.step(aActions)
+        
+        reward = newAreaVis + min(1,episode/(0.75* NUM_EPISODES))*penalty
+        
+#        print(reward, newAreaVis, penalty)
+        
         if step == LEN_EPISODES -1:
             done = True
         memory.rewards.append(reward)
