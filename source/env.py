@@ -32,7 +32,7 @@ class Env:
         self.out = cv2.VideoWriter(f"checkpoints/cnn1.avi",self.fourcc, 50, (700,700))
     
     def initObsMaps_Vsbs(self):
-        return obsMap.getAllObs_vsbs(np.zeros((50,50)))
+        return obsMap.getAllObs_vsbs(np.zeros((CONST.MAP_SIZE, CONST.MAP_SIZE)))
     
     def setRandMap_vsb(self):
         i = random.randint(0, len(self.obsMaps)-1)
@@ -63,7 +63,8 @@ class Env:
 #            adversaries.append(Adversary(25.5,10.5))
                    
         for agent in agents:
-            obstacleViewedMap = self.vsb.updateVsbOnImg([agent.getState()[0]],obstacleViewedMap, self.vsbPoly)
+            gPos = self.cartesian2Grid([agent.getState()[0]])
+            obstacleViewedMap = self.vsb.updateVsbOnImg([agent.getState()[0]], gPos,obstacleViewedMap, self.vsbPoly)
         
         agentPos = [agent.getState()[0] for agent in agents]
         gPos = self.cartesian2Grid(agentPos)
@@ -71,6 +72,7 @@ class Env:
         
         advrsyPos = [adversary.getState()[0] for adversary in adversaries]
         advPos = self.cartesian2Grid(advrsyPos)
+        advObsPlusViewed = self.vsb.updateVsbOnImg(advrsyPos, advPos,obstacleViewedMap, self.vsbPoly)
         advObsPlusViewed = self.updatePosMap(advPos, obstacleViewedMap, 200)
         
         
@@ -80,7 +82,8 @@ class Env:
         obstacleMap = self.obstacleMap
         obstacleViewedMap = np.copy(obstacleMap)
         for agent in self.agents:
-            obstacleViewedMap = self.vsb.updateVsbOnImg([agent.getState()[0]],obstacleViewedMap, self.vsbPoly)
+            gPos = self.cartesian2Grid([agent.getState()[0]])
+            obstacleViewedMap = self.vsb.updateVsbOnImg([agent.getState()[0]], gPos,obstacleViewedMap, self.vsbPoly)
         
         agentPos = [agent.getState()[0] for agent in self.agents]
         gPos = self.cartesian2Grid(agentPos)
@@ -109,8 +112,8 @@ class Env:
         advrsyPos = [adversary.getState()[0] for adversary in self.adversaries]
         
         advPos = self.cartesian2Grid(advrsyPos)
-        advObsPlusViewed = self.vsb.updateVsbOnImg(advrsyPos,self.obstacleMap, self.vsbPoly)
-        advObsPlusViewed = self.updatePosMap(advPos, advObsPlusViewed, 200)
+        advObsPlusViewed = self.vsb.updateVsbOnImg(advrsyPos, advPos, self.obstacleMap, self.vsbPoly)
+        self.advObsPlusViewed = self.updatePosMap(advPos, advObsPlusViewed, 200)
         
         state = []
         for agent in self.agents:
@@ -144,10 +147,10 @@ class Env:
                 futureState[0] += 1
             # check if agent in obstacle
             isValidPt = False
-            if 0<futureState[0] <50 and 0<futureState[1] <50 :
+            if 0<futureState[0] < CONST.MAP_SIZE and 0<futureState[1] < CONST.MAP_SIZE :
                 if self.obstacleMap[int(futureState[0]), int(futureState[1])] == 150:
                     isValidPt = True
-            if 0<futureState[0] <50 and 0<futureState[1] <50 and not isValidPt:
+            if 0<futureState[0] < CONST.MAP_SIZE and 0<futureState[1] < CONST.MAP_SIZE and not isValidPt:
                 vel = np.array([0,0])
                 if action == 0:
                     pass
@@ -173,13 +176,13 @@ class Env:
         agentPos, agentVel = self.stepAgent(agentActions)
         gPos = self.cartesian2Grid(agentPos)
         # get new visibility and update obsPlusViewed
-        self.obsPlusViewed = self.vsb.updateVsbOnImg(agentPos,self.obsPlusViewed, self.vsbPoly)
+        self.obsPlusViewed = self.vsb.updateVsbOnImg(agentPos, gPos,self.obsPlusViewed, self.vsbPoly)
         # update position on currentMapState
         self.currentMapState = self.updatePosMap(gPos, self.obsPlusViewed, 100)
         
         advrsyPos = [adversary.getState()[0] for adversary in self.adversaries]
         advPos = self.cartesian2Grid(advrsyPos)
-        self.advObsPlusViewed = self.vsb.updateVsbOnImg(advrsyPos,self.obstacleMap, self.vsbPoly)
+        self.advObsPlusViewed = self.vsb.updateVsbOnImg(advrsyPos,advPos, self.obstacleMap, self.vsbPoly)
         self.advObsPlusViewed = self.updatePosMap(advPos, self.advObsPlusViewed, 200)
         
         AdvVisibility = self.vsb.checkPtInVsbPolyDict(advrsyPos, agentPos, self.vsbPoly)

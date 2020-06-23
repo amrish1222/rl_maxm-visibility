@@ -26,19 +26,20 @@ class Obstacle:
         vsbPolys = []
         numOpenCellsArr = []
         a = time.time()
-        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle1())
-        obsMaps.append(mp)
-        vsbs.append(vsb)
-        vsbPoly =  self.getVisibilityPolys(vsb, mp)
-        vsbPolys.append(vsbPoly)
-        numOpenCellsArr.append(np.count_nonzero(mp==0))
         
-#        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle2())
+#        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle1())
 #        obsMaps.append(mp)
 #        vsbs.append(vsb)
 #        vsbPoly =  self.getVisibilityPolys(vsb, mp)
 #        vsbPolys.append(vsbPoly)
 #        numOpenCellsArr.append(np.count_nonzero(mp==0))
+        
+        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle2())
+        obsMaps.append(mp)
+        vsbs.append(vsb)
+        vsbPoly =  self.getVisibilityPolys(vsb, mp)
+        vsbPolys.append(vsbPoly)
+        numOpenCellsArr.append(np.count_nonzero(mp==0))
 #        
 #        mp, vsb = self.getObstacleMap(emptyMap, self.obstacle3())
 #        obsMaps.append(mp)
@@ -77,7 +78,7 @@ class Obstacle:
         for obs, isHole in obsList:
             p = Path(obs)
             grid = p.contains_points(points)
-            mask = grid.reshape(50,50)
+            mask = grid.reshape(CONST.MAP_SIZE,CONST.MAP_SIZE)
             img = np.logical_or(img , (mask if not isHole else np.logical_not(mask)))
            
         img = img.T

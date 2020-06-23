@@ -174,12 +174,23 @@ class Visibility:
         canSee = p.contains_points(points)
         return canSee
     
-    def updateVsbOnImg(self, pt, img, vsbPolyDict):
+    def updateVsbOnImg(self, pt, gPt, img, vsbPolyDict):
         p = pt[0]
+        g = gPt[0]
         p = Path(vsbPolyDict[(p[0],p[1])])
         points = CONST.GRID_CENTER_PTS
         grid = p.contains_points(points)
-        mask = grid.reshape(50,50)
+        mask = grid.reshape(CONST.MAP_SIZE, CONST.MAP_SIZE)
+        # side of local visible area/2
+        r = int((CONST.LOCAL_SZ -1) /2)
+        lx = max(0, g[1] - r)
+        hx = min(CONST.MAP_SIZE, r + g[1] + 1)
+        ly = max(0, g[0] - r)
+        hy = min(CONST.MAP_SIZE, r + g[0] + 1)
+        tempMask = np.zeros_like(mask)
+        tempMask[lx: hx , ly : hy] = 1
+        
+        mask = np.where(tempMask==0, False, mask)
         vsbGrid = mask.T
         temp = np.copy(img)
         # updating grid with matplotlib calculated visibility grid

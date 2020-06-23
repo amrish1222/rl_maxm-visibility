@@ -23,7 +23,7 @@ class CONSTANTS:
 
         self.MAX_STEPS = 50
         
-        self.MAP_SIZE = self.MAX_STEPS * self.GRID_SZ
+        self.MAP_SIZE = int(self.MAX_STEPS * self.GRID_SZ)
         
         self.GRID_CENTER_PTS = self.getGridCenterPts()
         
@@ -31,8 +31,10 @@ class CONSTANTS:
         
         self.VISIBILITY_PENALTY = 30
         
+        self.LOCAL_SZ = 11
+        
     def getGridCenterPts(self):
-        x, y = np.meshgrid(np.arange(50), np.arange(50))
+        x, y = np.meshgrid(np.arange(self.MAP_SIZE), np.arange(self.MAP_SIZE))
         x, y = x.flatten()+0.5, y.flatten() + 0.5
         points = np.vstack((x,y)).T
         return points

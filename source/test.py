@@ -31,7 +31,7 @@ def getKeyPress():
 env = Env()
 
 NUM_EPISODES = 100
-LEN_EPISODES = 200
+LEN_EPISODES = 500
 
 act = 0 
 
@@ -41,7 +41,7 @@ for episode in tqdm(range(NUM_EPISODES)):
     for step in range(LEN_EPISODES):
         # step agent
         actions = [getKeyPress()]
-        agentPosList, display, rewardList, done = env.step(actions)
+        _, _, _, _, _, _, done = env.step(actions)
 #        print(rewardList, done)
 #        print(agentPosList)
         env.render()
