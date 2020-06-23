@@ -54,8 +54,8 @@ class Env:
         ndxs = random.sample(range(x.shape[0]), CONST.NUM_AGENTS + CONST.NUM_ADVRSRY)
 
         for ndx in ndxs[:-(CONST.NUM_ADVRSRY)]:
-            agents.append(Agent(x[ndx]+0.5, y[ndx]+0.5))
-#            agents.append(Agent())
+#            agents.append(Agent(x[ndx]+0.5, y[ndx]+0.5))
+            agents.append(Agent())
 
         adversaries = []
         for ndx in ndxs[-(CONST.NUM_ADVRSRY):]:

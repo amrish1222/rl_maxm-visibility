@@ -29,7 +29,7 @@ class CONSTANTS:
         
         self.SEPERATION_PENALTY = 10
         
-        self.VISIBILITY_PENALTY = 100
+        self.VISIBILITY_PENALTY = 30
         
     def getGridCenterPts(self):
         x, y = np.meshgrid(np.arange(50), np.arange(50))

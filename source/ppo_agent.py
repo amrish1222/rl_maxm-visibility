@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.distributions import Categorical
@@ -125,16 +126,17 @@ class ActorCritic(nn.Module):
         raise NotImplementedError
         
     def act(self, state, memory):
-        state1 = torch.from_numpy(state[0]).float().to(device)
-        state2 = torch.from_numpy(state[1]).float().to(device) 
-        action_probs = self.action_layer(state1.unsqueeze(0), state2.unsqueeze(0))
-        dist = Categorical(action_probs)
-        action = dist.sample()
-        
-        memory.states1.append(state1)
-        memory.states2.append(state2)
-        memory.actions.append(action)
-        memory.logprobs.append(dist.log_prob(action))
+        with torch.no_grad():
+            state1 = torch.from_numpy(state[0]).float().to(device)
+            state2 = torch.from_numpy(state[1]).float().to(device)
+            action_probs = self.action_layer(state1.unsqueeze(0), state2.unsqueeze(0))
+            dist = Categorical(action_probs)
+            action = dist.sample()
+            
+            memory.states1.append(state1)
+            memory.states2.append(state2)
+            memory.actions.append(action)
+            memory.logprobs.append(dist.log_prob(action))
         
         return action.item()
     
@@ -154,7 +156,7 @@ class PPO:
     def __init__(self, env):
         self.lr = 0.000002
         self.betas = (0.9, 0.999)
-        self.gamma = 0.99 
+        self.gamma = 1.0
         self.eps_clip = 0.2
         self.K_epochs = 4
         
@@ -162,8 +164,8 @@ class PPO:
         
         self.policy = ActorCritic(env).to(device)
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=self.lr, betas=self.betas)
-        self.policy_old = ActorCritic(env).to(device)
-        self.policy_old.load_state_dict(self.policy.state_dict())
+#        self.policy_old = ActorCritic(env).to(device)
+#        self.policy_old.load_state_dict(self.policy.state_dict())
         
         self.MseLoss = nn.MSELoss()
         self.sw = SummaryWriter(log_dir=f"tf_log/demo_CNN{random.randint(0, 1000)}")
@@ -171,47 +173,64 @@ class PPO:
     
     def update(self, memory):   
         # Monte Carlo estimate of state rewards:
-        rewards = []
+        all_rewards = []
         discounted_reward = 0
         for reward, is_terminal in zip(reversed(memory.rewards), reversed(memory.is_terminals)):
             if is_terminal:
                 discounted_reward = 0
             discounted_reward = reward + (self.gamma * discounted_reward)
-            rewards.insert(0, discounted_reward)
+            all_rewards.insert(0, discounted_reward)
         
         # Normalizing the rewards:
-        rewards = torch.tensor(rewards).to(device)
-        rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-5)
+#        all_rewards = torch.tensor(all_rewards).to(device)
+#        all_rewards = (all_rewards - all_rewards.mean()) / (all_rewards.std() + 1e-5)
+        all_rewards =np.array(all_rewards)
+        all_rewards = (all_rewards - all_rewards.mean()) / (all_rewards.std() + 1e-5)
         
-        # convert list to tensor
-        old_states1 = torch.stack(memory.states1).to(device).detach()
-        old_states2 = torch.stack(memory.states2).to(device).detach()
-        old_actions = torch.stack(memory.actions).to(device).detach()
-        old_logprobs = torch.stack(memory.logprobs).to(device).detach()
         
+        minibatch_sz = 500
+        mem_sz = len(memory.states1)
         # Optimize policy for K epochs:
         for _ in range(self.K_epochs):
-            # Evaluating old actions and values :
-            logprobs, state_values, dist_entropy = self.policy.evaluate((old_states1, old_states2), old_actions)
-            
-            # Finding the ratio (pi_theta / pi_theta__old):
-            ratios = torch.exp(logprobs - old_logprobs.detach())
+            prev = 0
+            for i in range(minibatch_sz, mem_sz+1, minibatch_sz):
                 
-            # Finding Surrogate Loss:
-            advantages = rewards - state_values.detach()
-            advantages = advantages.view(-1,1)
-#            advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-5)
-            surr1 = ratios * advantages
-            surr2 = torch.clamp(ratios, 1-self.eps_clip, 1+self.eps_clip) * advantages
-            loss = -torch.min(surr1, surr2).mean() + 0.5*self.MseLoss(state_values, rewards) - 0.01*dist_entropy.mean()
-            
-            # take gradient step
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
+#                print(prev,i, minibatch_sz, mem_sz)
+                mini_old_states1 = memory.states1[prev:i]
+                mini_old_states2 = memory.states2[prev:i]
+                mini_old_actions = memory.actions[prev:i]
+                mini_old_logprobs = memory.logprobs[prev:i]
+                mini_rewards = all_rewards[prev:i]
+                
+                # convert list to tensor
+                old_states1 = torch.stack(mini_old_states1).to(device).detach()
+                old_states2 = torch.stack(mini_old_states2).to(device).detach()
+                old_actions = torch.stack(mini_old_actions).to(device).detach()
+                old_logprobs = torch.stack(mini_old_logprobs).to(device).detach()
+                rewards = torch.from_numpy(mini_rewards).float().to(device)
+                
+                prev = i
+                
+                # Evaluating old actions and values :
+                logprobs, state_values, dist_entropy = self.policy.evaluate((old_states1, old_states2), old_actions)
+                # Finding the ratio (pi_theta / pi_theta__old):
+                ratios = torch.exp(logprobs - old_logprobs.detach())
+                    
+                # Finding Surrogate Loss:
+                advantages = rewards - state_values.detach()
+                advantages = advantages.view(-1,1)
+    #            advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-5)
+                surr1 = ratios * advantages
+                surr2 = torch.clamp(ratios, 1-self.eps_clip, 1+self.eps_clip) * advantages
+                loss = -torch.min(surr1, surr2).mean() + 0.5*self.MseLoss(state_values, rewards) - 0.01*dist_entropy.mean()
+                
+                # take gradient step
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
         
         # Copy new weights into old policy:
-        self.policy_old.load_state_dict(self.policy.state_dict())
+#        self.policy_old.load_state_dict(self.policy.state_dict())
         return advantages.mean().item()
         
     def formatInput(self, states):

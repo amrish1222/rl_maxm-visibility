@@ -31,10 +31,10 @@ def getKeyPressOld(act):
     return act
 
 def getKeyPress(act):
-#    if keyboard.is_pressed('['):
-#        act = 1
-#    elif keyboard.is_pressed(']'):
-#        act = 2
+    if keyboard.is_pressed('['):
+        act = 1
+    elif keyboard.is_pressed(']'):
+        act = 2
     return act
 
 
@@ -46,7 +46,7 @@ rlAgent = PPO(env)
 
 NUM_EPISODES = 50000
 LEN_EPISODES = 500
-UPDATE_TIMESTEP = 1000
+UPDATE_TIMESTEP = 10000
 curState = []
 newState= []
 reward_history = []
@@ -89,14 +89,15 @@ for episode in tqdm(range(NUM_EPISODES)):
         aActions = []
         for i in range(CONST.NUM_AGENTS):
             # get action for each agent using its current state from the network
-            action = rlAgent.policy_old.act(curState[i], memory)
+#            action = rlAgent.policy_old.act(curState[i], memory)
+            action = rlAgent.policy.act(curState[i], memory)
             aActions.append(action)
         
         # do actions
         agentPosList, advrsyPosList, display, reward, newAreaVis, penalty, done = env.step(aActions)
         
-        reward = newAreaVis + min(1,episode/(0.75* NUM_EPISODES))*penalty
-        
+#        reward = newAreaVis + min(1,episode/(0.75* NUM_EPISODES))*penalty
+        reward = newAreaVis
 #        print(reward, newAreaVis, penalty)
         
         if step == LEN_EPISODES -1:
